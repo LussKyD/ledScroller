@@ -20,7 +20,24 @@
       showScroller: false
     });
 
-    useEffect(function(){ var t = setTimeout(function(){ setShowSplash(false); }, 1200); return function(){ clearTimeout(t); }; }, []);
+    // initialize theme from localStorage
+    useEffect(function(){
+      try {
+        var stored = localStorage.getItem('led_theme');
+        if(stored === 'light'){ setDarkMode(false); document.body.classList.add('light'); }
+        else { setDarkMode(true); document.body.classList.remove('light'); }
+      } catch(e){ /* ignore storage errors */ }
+      var t = setTimeout(function(){ setShowSplash(false); }, 1200);
+      return function(){ clearTimeout(t); };
+    }, []);
+
+    // sync body class and localStorage whenever darkMode changes
+    useEffect(function(){
+      try {
+        if(darkMode){ document.body.classList.remove('light'); localStorage.setItem('led_theme','dark'); }
+        else { document.body.classList.add('light'); localStorage.setItem('led_theme','light'); }
+      } catch(e){ /* ignore */ }
+    }, [darkMode]);
 
     var handleChange = useCallback(function(name, value){
       setScrollerSettings(function(prev){
@@ -44,7 +61,7 @@
       var color = scrollerSettings.color;
       var durationSeconds = 25 - (speed * 2);
 
-      var styleTag = e('style', null, "\n        @keyframes infinite-scroll { from { transform: translateX(100%);} to { transform: translateX(-100%);} }\n        .animate-scroller { animation: infinite-scroll " + durationSeconds + "s linear infinite; white-space:nowrap; }\n        .led-text { color: " + color + "; text-shadow: 0 0 6px " + color + ", 0 0 12px " + color + "; }\n      ");
+      var styleTag = e('style', null, "\n        @keyframes infinite-scroll { from { transform: translateX(100%);} to { transform: translateX(-100%);} }\n        .animate-scroller { animation: infinite-scroll " + durationSeconds + "s linear infinite; white-space:nowrap; }\n        .led-text { color: " + color + "; text-shadow: 0 0 6px " + color + ", 0 0 12px rgba(0,0,0,0.2); }\n      ");
 
       return e('div', { className: 'scroller-full' },
         styleTag,
@@ -62,17 +79,17 @@
     function InputScreen(){
       return e('div', { className: 'app-center' },
         e('div', { className: 'top-right' },
-          e('button', { onClick: function(){ setDarkMode(!darkMode); }, className: 'button-primary', style: { background: darkMode ? '#111827' : '#4f46e5' } }, darkMode ? '☀️ Light' : '🌙 Dark')
+          e('button', { onClick: function(){ setDarkMode(!darkMode); }, className: 'button-primary', 'aria-pressed': !darkMode, title: 'Toggle theme' }, darkMode ? '☀️ Light' : '🌙 Dark')
         ),
         e('div', { className: 'card' },
           e('div', { className: 'header' }, e('h2', null, 'LED Scroller Configuration')),
           e('div', { className: 'form-row' },
-            e('label', null, 'Marquee Message'),
-            e('textarea', { value: scrollerSettings.text, onInput: function(ev){ handleChange('text', ev.target.value); }, placeholder: 'Enter the text to scroll...' })
+            e('label', { htmlFor: 'marqueeText' }, 'Marquee Message'),
+            e('textarea', { id: 'marqueeText', value: scrollerSettings.text, onInput: function(ev){ handleChange('text', ev.target.value); }, placeholder: 'Enter the text to scroll...' })
           ),
           e('div', { className: 'form-row' },
-            e('label', null, 'LED Color'),
-            e('div', { className: 'color-pick' },
+            e('label', { htmlFor: 'colorPick' }, 'LED Color'),
+            e('div', { id: 'colorPick', className: 'color-pick', role: 'group', 'aria-label': 'LED color options' },
               COLOR_OPTIONS.map(function(opt){
                 return e('button', {
                   key: opt.hex,
@@ -85,8 +102,8 @@
             )
           ),
           e('div', { className: 'form-row' },
-            e('label', null, 'Scroll Speed: ' + scrollerSettings.speed),
-            e('input', { type: 'range', min: 1, max: 10, value: scrollerSettings.speed, onInput: function(e){ handleChange('speed', Number(e.target.value)); }, className: 'range' })
+            e('label', { htmlFor: 'speedRange' }, 'Scroll Speed: ' + scrollerSettings.speed),
+            e('input', { id: 'speedRange', type: 'range', min: 1, max: 10, value: scrollerSettings.speed, onInput: function(e){ handleChange('speed', Number(e.target.value)); }, className: 'range' })
           ),
           e('div', null,
             e('button', { onClick: handleShowScroller, className: 'button-primary' }, 'Show Scroller')
