@@ -118,3 +118,18 @@
   var rootEl = document.getElementById('root');
   ReactDOM.createRoot(rootEl).render(React.createElement(App));
 })();
+// Enhanced adaptive theme support for LED Scroller Config UI
+document.querySelectorAll('.form-row label, .form-row span').forEach(el => {
+  el.style.color = document.body.classList.contains('dark-mode') ? '#ddd' : '#222';
+});
+
+const updateScrollerTheme = () => {
+  const scroller = document.querySelector('.scroller-display');
+  if (scroller) {
+    scroller.style.background = document.body.classList.contains('dark-mode') ? '#111' : '#f5f5f5';
+    scroller.style.color = document.body.classList.contains('dark-mode') ? '#eee' : '#000';
+  }
+};
+
+document.querySelector('.theme-toggle')?.addEventListener('click', updateScrollerTheme);
+updateScrollerTheme();
