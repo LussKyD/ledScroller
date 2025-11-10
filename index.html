@@ -13,11 +13,9 @@
 <script>
 (function(){
   try {
-    var theme = localStorage.getItem('led_theme');
-    if(theme === 'light'){ document.documentElement.classList.add('light'); document.body.classList.add('light'); }
-    // soft gray background for light mode
-    if(document.body.classList.contains('light')) document.body.style.background = '#f3f4f6';
-  } catch(e){}
+    var t = localStorage.getItem('led_theme');
+    if (t === 'light') { document.documentElement.classList.add('light'); document.body.classList.add('light'); }
+  } catch(e) {}
 })();
 </script>
 
@@ -26,6 +24,8 @@
   <div id="root"></div>
   <script src="./js/LEDScroller.js"></script>
   <script src="./js/adaptive-theme.js"></script>
-  <script src="./js/adaptive-theme-v025.js"></script>
+
+  <footer style="position:fixed;left:12px;bottom:8px;font-size:12px;opacity:0.75;color:inherit">LED Scroller by DRACOiNC Techs v0.2.6</footer>
+  <script src="./js/adaptive-theme-v026.js"></script>
 </body>
 </html>

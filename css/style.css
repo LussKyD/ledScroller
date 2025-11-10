@@ -52,3 +52,6 @@ button:focus, textarea:focus, input:focus { outline:3px solid rgba(79,70,229,0.1
 
 /* fade out keyframes */
 @keyframes fadeOut{to{opacity:0;visibility:hidden;}}
+/* v0.2.6 scroller tint helper */
+.scroller-full { transition: background 300ms ease, color 300ms ease; position: relative; overflow: hidden; }
+.scroller-full .__led_tint { transition: opacity 300ms ease; pointer-events: none; }
