@@ -1,7 +1,7 @@
 // Wrap the core React logic in a self-executing function for stability and scope isolation
 (function() {
   const e = React.createElement;
-  // IMPORTANT: Destructure React.memo here for optimization
+  // IMPORTANT: Destructure React.memo, useRef here for optimization
   const { useState, useEffect, useCallback, memo, useRef } = React; 
 
   // --- Constants ---
@@ -25,289 +25,282 @@
   }
 
   // Helper to calculate optimal font size (vw) based on text length
-  // Longer text needs a smaller font to fit on small screens
   function calculateFontSize(text) {
-      if (!text) return '10vw';
-      const baseSize = 25; // Base vw size for very short text
+      if (!text) return '9vw';
+      const baseSize = 14; // Max vw size for short text on desktop
       const minSize = 6;  // Minimum vw size
-      // Formula: baseSize - (length * reduction_factor). Clamped between baseSize and minSize.
-      const fontSize = Math.max(minSize, baseSize - (text.length * 0.5));
+      // Linear reduction based on length, clamped to reasonable limits
+      const fontSize = Math.max(minSize, baseSize - (text.length * 0.45));
       return fontSize + 'vw';
   }
 
   // --- LED Scroller Display Component (MEMOIZED) ---
-  const LEDScrollerDisplay = memo(function LEDScrollerDisplay({ text, speed, color, blinkEnabled, onHideScroller }) {
+  const LEDScrollerDisplay = memo(function LEDScrollerDisplay({ text, speed, color, blinkEnabled, onHideScroller }){
     const scrollerRef = useRef(null);
-    const [scrollerText, setScrollerText] = useState(text || 'DRACOiNC');
+    const scrollerText = text || 'DRACOiNC';
 
-    // 1. Calculate Duration and Font Size
+    // Map speed (1-10) to duration (slowest 20s to fastest 5s)
+    // Formula: duration = 20s - (speed * 1.5)
+    // Dynamic adjustment to make it feel responsive to the speed slider.
+    const durationSeconds = (20 - (speed * 1.5)).toFixed(2) + 's'; 
     const fontSize = calculateFontSize(scrollerText);
-    const characters = scrollerText.length;
-    // Speed: 1 (fastest) to 10 (slowest). Duration: 1s (fast) to 15s (slow)
-    // Formula: duration = 1s + (speed * 1.5) + (characters / 5)
-    // The duration is dynamically tied to both speed and length for a consistent *feel*.
-    const scrollDuration = (1 + (speed * 1.5) + (characters / 5)).toFixed(2) + 's'; 
 
-    useEffect(() => {
-        // Update the scroller text when the prop changes
-        setScrollerText(text || 'DRACOiNC');
-    }, [text]);
-
-    // 2. Dynamic Scroll Animation Setup (using CSS Variable)
+    // CRITICAL: Use useEffect to set the CSS variables and properties
     useEffect(() => {
         const scrollerElement = scrollerRef.current;
         if (scrollerElement) {
-            // Set the scroll-duration CSS variable to control the animation
-            scrollerElement.style.setProperty('--scroll-duration', scrollDuration);
+            // 1. Set the CSS variable for animation duration
+            scrollerElement.style.setProperty('--scroll-duration', durationSeconds);
             
-            // To prevent a flicker/jump when duration changes, restart the animation
-            // by toggling the class.
-            scrollerElement.classList.remove('led-text');
-            // Force a reflow/repaint to ensure the class removal takes effect immediately
-            void scrollerElement.offsetWidth; 
-            scrollerElement.classList.add('led-text');
+            // 2. Set the dynamic styles (color, glow, font size)
+            scrollerElement.style.color = color;
+            scrollerElement.style.fontSize = fontSize;
+            scrollerElement.style.textShadow = `0 0 10px ${color}, 0 0 20px ${color}`;
+
+            // Optional: Restart animation if duration changes to apply immediately
+            // This is more of a hack than a fix, but ensures smooth update
+            scrollerElement.style.animation = 'none';
+            // Force a reflow
+            void scrollerElement.offsetWidth;
+            scrollerElement.style.animation = null; // Re-enable the CSS animation
         }
-        // No cleanup needed because we're not inserting/deleting global CSS rules.
-    }, [scrollDuration]); 
+    }, [durationSeconds, color, fontSize]);
+
 
     // 3. Render
-    return (
-      e('div', { className: 'scroller-full' }, 
-        // Close button at the top-right
-        e('button', {
-          onClick: onHideScroller,
-          style: {
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            zIndex: 20,
-            background: 'rgba(0,0,0,0.5)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '5px',
-            padding: '8px 15px',
-            cursor: 'pointer',
-          }
-        }, 'X'),
-
+    return e('div', { className: 'scroller-full' },
         e('div', { className: 'scroll-track' },
-          // The led-text div is the element that scrolls
           e('div', { 
             ref: scrollerRef,
+            // The led-text class now contains the static animation rule
             className: 'led-text' + (blinkEnabled ? ' animate-blink' : ''),
-            // Set the dynamic styles directly
-            style: {
-              color: color,
-              fontSize: fontSize,
-              // Add a glow effect matching the color
-              textShadow: '0 0 10px ' + color + ', 0 0 20px ' + color,
-              // Set the initial position (off-screen right)
-              transform: 'translateX(100%)', 
-            }
-          }, scrollerText)
-        )
-      )
+          },
+            // CRITICAL FIX: Duplicate the text at least three times to ensure
+            // the full loop effect is seamless and responsive
+            e('span', { style: { paddingRight: '40px' } }, scrollerText.toUpperCase()),
+            e('span', { style: { paddingRight: '40px' } }, scrollerText.toUpperCase()),
+            e('span', { style: { paddingRight: '40px' } }, scrollerText.toUpperCase())
+          )
+        ),
+      // Exit Button positioned at the bottom center
+      e('button', { 
+        onClick: onHideScroller,
+        className: 'button-primary', 
+        style: { 
+          // Custom styles for scroller exit button
+          marginTop: '18px', 
+          width: 'auto', 
+          padding: '10px 18px', 
+          background: color, 
+          color: contrast(color), 
+          position: 'absolute',
+          bottom: '40px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10 
+        } 
+      }, 'Exit Scroller')
     );
   });
-  
-  // --- Main Application Component ---
-  function App() {
-    const [scrollerSettings, setScrollerSettings] = useState(() => {
-        // Initial state loaded from localStorage, or defaults
-        try {
-            const savedSettings = localStorage.getItem('ledScrollerSettings');
-            return savedSettings ? JSON.parse(savedSettings) : {
-                text: 'DRACOiNC TECHS',
-                speed: 5, // 1 to 10
-                color: COLOR_OPTIONS[0].hex, // Red
-                blinkEnabled: false,
-                showScroller: false,
-                // Add a setting for the theme toggle (default to false/dark)
-                isLightMode: document.documentElement.classList.contains('light')
-            };
-        } catch (error) {
-            console.error("Could not load settings from localStorage", error);
-            return {
-                text: 'DRACOiNC TECHS',
-                speed: 5,
-                color: COLOR_OPTIONS[0].hex,
-                blinkEnabled: false,
-                showScroller: false,
-                isLightMode: document.documentElement.classList.contains('light')
-            };
-        }
-    });
+
+
+  /**
+   * The main component that manages the app state and switches between
+   * the Input Screen and the Scroller Display.
+   */
+  function App(){
+    const [darkMode, setDarkMode] = useState(true);
+    const [showSplash, setShowSplash] = useState(true);
+    const [errorMessage, setErrorMessage] = useState(''); 
     
-    // Splash Screen State Machine: 'SHOWING' -> 'FADING_OUT' -> 'HIDDEN'
-    const [splashPhase, setSplashPhase] = useState('SHOWING');
+    // Initialize state with values from localStorage, falling back to defaults
+    const [scrollerSettings, setScrollerSettings] = useState(function(){
+      try {
+        var storedBlink = localStorage.getItem('led_blink') === '1';
 
-    // 1. Splash Screen Lifecycle Management (The Fix for Abrupt Exit)
-    useEffect(() => {
-        if (splashPhase === 'SHOWING') {
-            const SHOW_DURATION = 1500; // Time to display the splash screen
-            const FADE_DURATION = 300;  // Time for the CSS fade-out animation
-
-            // Step 1: Wait for the initial display time
-            const showTimer = setTimeout(() => {
-                setSplashPhase('FADING_OUT'); // Trigger CSS fade
-            }, SHOW_DURATION);
-
-            // Step 2: Wait for the fade animation to complete
-            const fadeTimer = setTimeout(() => {
-                setSplashPhase('HIDDEN'); // Hide (unmount) the component
-            }, SHOW_DURATION + FADE_DURATION);
-
-            // Cleanup function for useEffect (runs on unmount or before re-run)
-            return () => {
-                clearTimeout(showTimer);
-                clearTimeout(fadeTimer);
-            };
-        }
-    }, [splashPhase]);
-
-
-    // 2. Save state to localStorage whenever settings change
-    useEffect(() => {
-        try {
-            // Only save the user-configurable settings, not runtime flags like 'showScroller'
-            const { showScroller, isLightMode, ...settingsToSave } = scrollerSettings;
-            localStorage.setItem('ledScrollerSettings', JSON.stringify(settingsToSave));
-            
-            // Apply theme class to <html> and <body> (for global CSS variables)
-            const html = document.documentElement;
-            const body = document.body;
-            if (scrollerSettings.isLightMode) {
-                html.classList.add('light');
-                body.classList.add('light');
-                localStorage.setItem('led_theme', 'light');
-            } else {
-                html.classList.remove('light');
-                body.classList.remove('light');
-                localStorage.setItem('led_theme', 'dark');
-            }
-
-        } catch (error) {
-            console.error("Could not save settings to localStorage", error);
-        }
-    }, [scrollerSettings]);
-
-    // --- State Handler Functions ---
-
-    const handleInputChange = useCallback((field) => (event) => {
-        let value = event.target.type === 'checkbox' ? event.target.checked : event.target.value;
-        if (field === 'speed') value = Number(value); // Convert range to number
+        // Load theme from body class set in index.html
+        var isDark = !document.body.classList.contains('light');
+        setDarkMode(isDark);
         
-        setScrollerSettings(prev => ({
-            ...prev,
-            [field]: value,
-        }));
+        return {
+          text: localStorage.getItem('led_message') || 'DRACOiNC TECHS',
+          speed: Number(localStorage.getItem('led_speed')) || 5,
+          color: localStorage.getItem('led_color') || COLOR_OPTIONS[0].hex,
+          blinkEnabled: storedBlink, 
+          showScroller: false
+        };
+      } catch(e) {
+        return { text: 'DRACOiNC TECHS', speed: 5, color: COLOR_OPTIONS[0].hex, blinkEnabled: false, showScroller: false };
+      }
+    });
+
+    // 1. Initial Theme Setup and Splash Screen
+    useEffect(function(){
+      // Splash screen fade-out timer
+      var t = setTimeout(function(){ setShowSplash(false); }, 1500); // 1.5s total display
+      return function(){ clearTimeout(t); };
     }, []);
 
-    const handleColorChange = useCallback((hex) => {
-        setScrollerSettings(prev => ({
-            ...prev,
-            color: hex
-        }));
-    }, []);
-    
-    const handleThemeToggle = useCallback(() => {
-        setScrollerSettings(prev => ({
-            ...prev,
-            isLightMode: !prev.isLightMode
-        }));
-    }, []);
-
-    const handleShowScroller = useCallback(() => {
-        // Prevent showing the scroller if the text is empty or just whitespace
-        if (!scrollerSettings.text.trim()) {
-             alert("Please enter a message to display!");
-             return;
+    // 2. Theme Persistence
+    useEffect(function(){
+      try {
+        var html = document.documentElement;
+        var body = document.body;
+        if(darkMode){ 
+          body.classList.remove('light'); 
+          html.classList.remove('light');
+          localStorage.setItem('led_theme','dark'); 
+        } else { 
+          body.classList.add('light'); 
+          html.classList.add('light');
+          localStorage.setItem('led_theme','light'); 
         }
-        setScrollerSettings(prev => ({ ...prev, showScroller: true }));
+      } catch(e){ /* ignore */ }
+    }, [darkMode]);
+
+    // 3. Persist Scroller Settings on change
+    useEffect(function(){
+      try {
+        localStorage.setItem('led_message', scrollerSettings.text);
+        localStorage.setItem('led_speed', scrollerSettings.speed);
+        localStorage.setItem('led_blink', scrollerSettings.blinkEnabled ? '1' : '0');
+        localStorage.setItem('led_color', scrollerSettings.color);
+      } catch(e) { /* ignore */ }
+    }, [scrollerSettings.text, scrollerSettings.speed, scrollerSettings.color, scrollerSettings.blinkEnabled]);
+
+
+    var handleChange = useCallback(function(name, value){
+      setScrollerSettings(function(prev){
+        var copy = Object.assign({}, prev);
+        copy[name] = value;
+        if(name === 'text' && value.trim().length > 0) setErrorMessage('');
+        return copy;
+      });
+    }, []);
+
+    var handleToggleBlink = useCallback(function(){
+        setScrollerSettings(function(prev){ return Object.assign({}, prev, { blinkEnabled: !prev.blinkEnabled }); });
+    }, []);
+
+    var handleShowScroller = useCallback(function(){
+      if(scrollerSettings.text.trim().length > 0){
+        setScrollerSettings(function(prev){ return Object.assign({}, prev, { showScroller: true }); });
+      } else { 
+        setErrorMessage('Please enter text for the scroller.');
+      }
     }, [scrollerSettings.text]);
 
-    const handleHideScroller = useCallback(() => {
-        setScrollerSettings(prev => ({ ...prev, showScroller: false }));
+    var handleHideScroller = useCallback(function(){ 
+      setScrollerSettings(function(prev){ return Object.assign({}, prev, { showScroller: false }); }); 
     }, []);
 
-
-    // --- Input Screen Component ---
-    function InputScreen() {
-      // Memoized component for the input form
-      return (
-        e('div', { className: 'card' },
-          // 1. Header and Theme Toggle
-          e('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
-            e('h2', { style: { margin: 0, fontSize: '1.5rem' } }, 'LED Scroller Setup'),
-            e('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
-                e('label', { htmlFor: 'themeToggle', style: { marginBottom: 0, cursor: 'pointer' } }, scrollerSettings.isLightMode ? '☀️ Light' : '🌙 Dark'),
-                e('label', { className: 'toggle-switch' },
-                    e('input', { 
-                        type: 'checkbox', 
-                        id: 'themeToggle', 
-                        checked: scrollerSettings.isLightMode,
-                        onChange: handleThemeToggle
-                    }),
-                    e('span', { className: 'slider' })
-                )
+    // --- Input Configuration Screen Component ---
+    function InputScreen(){
+      return e('div', { className: 'app-center' },
+        // Theme Toggle button (Top Right)
+        e('div', { className: 'top-right' },
+          e('div', { style: { display: 'flex', alignItems: 'center', gap: '10px' } },
+            e('span', { style: { color: 'var(--text-main)', fontSize: '14px', fontWeight: '500' } }, darkMode ? '🌙 Dark' : '☀️ Light'),
+            e('label', { className: 'toggle-switch' },
+                e('input', { 
+                    type: 'checkbox', 
+                    id: 'themeToggle', 
+                    checked: !darkMode, // Checkbox is checked for Light Mode
+                    onChange: function(){ setDarkMode(!darkMode); }
+                }),
+                e('label', { htmlFor: 'themeToggle', style: { marginBottom: 0 } })
             )
+          )
+        ),
+        
+        e('div', { className: 'card' },
+          e('div', { className: 'header' }, 
+            e('h2', { style: { color: 'var(--text-main)', fontSize: '1.5rem' } }, 'LED Scroller Configuration')
           ),
           
-          // 2. Text Input
-          e('div', null,
-            e('label', { htmlFor: 'textInput' }, 'Message Text'),
-            e('input', {
-              type: 'text',
-              id: 'textInput',
-              placeholder: 'Enter your message...',
-              value: scrollerSettings.text,
-              onChange: handleInputChange('text')
+          // 1. Text Input
+          e('div', { className: 'form-row' },
+            e('label', { htmlFor: 'marqueeText' }, 'Marquee Message'),
+            e('textarea', { 
+              id: 'marqueeText', 
+              value: scrollerSettings.text, 
+              onInput: function(ev){ handleChange('text', ev.target.value); }, 
+              placeholder: 'Enter the text to scroll...' 
             })
           ),
-
-          // 3. Speed Slider
-          e('div', null,
-            e('label', { htmlFor: 'speedRange' }, 'Speed: ' + scrollerSettings.speed),
-            e('input', {
-              type: 'range',
-              id: 'speedRange',
-              min: 1,
-              max: 10,
-              value: scrollerSettings.speed,
-              onChange: handleInputChange('speed')
-            }),
-            e('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' } },
-              e('span', null, 'Fast'),
-              e('span', null, 'Slow')
-            )
-          ),
-
-          // 4. Color Picker
-          e('div', null,
-            e('label', null, 'LED Color'),
-            e('div', { className: 'color-picker-container' },
-              COLOR_OPTIONS.map(option =>
-                e('div', {
-                  key: option.name,
-                  className: 'color-option' + (scrollerSettings.color === option.hex ? ' selected' : ''),
-                  style: { backgroundColor: option.hex },
-                  onClick: () => handleColorChange(option.hex)
-                })
-              )
-            )
-          ),
           
-          // 5. Blink Toggle
-          e('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px' } },
-              e('label', { htmlFor: 'blinkToggle', style: { margin: 0 } }, 'Blink Effect'),
-              e('label', { className: 'toggle-switch' },
-                  e('input', { 
-                      type: 'checkbox', 
-                      id: 'blinkToggle', 
-                      checked: scrollerSettings.blinkEnabled,
-                      onChange: handleInputChange('blinkEnabled')
-                  }),
-                  e('span', { className: 'slider' })
+          // 2. Error Message
+          errorMessage && e('div', { 
+            className: 'error-message', 
+            style: { 
+              padding: '12px', 
+              borderRadius: '8px', 
+              background: '#fee2e2', 
+              color: '#991b1b', 
+              marginBottom: '16px',
+              fontWeight: 'bold'
+            } 
+          }, errorMessage),
+
+          // 3. Color Selector
+          e('div', { className: 'form-row' },
+            e('label', { htmlFor: 'colorPickContainer' }, 'LED Color'), 
+            e('div', { 
+              id: 'colorPickContainer', 
+              className: 'color-pick', 
+              role: 'group', 
+              'aria-label': 'LED color options' 
+            },
+              COLOR_OPTIONS.map(function(opt){
+                return e('button', {
+                  key: opt.hex,
+                  className: 'color-btn',
+                  title: opt.name,
+                  onClick: function(){ handleChange('color', opt.hex); },
+                  style: { 
+                      background: opt.hex, 
+                      // Add border to distinguish selected color in light mode
+                      border: scrollerSettings.color === opt.hex ? '3px solid var(--accent)' : '3px solid rgba(255,255,255,0.06)',
+                      boxShadow: scrollerSettings.color === opt.hex ? `0 0 10px ${opt.hex}` : '0 6px 12px rgba(2,6,23,0.6)', 
+                      transform: scrollerSettings.color === opt.hex ? 'scale(1.15)' : 'scale(1)',
+                  }
+                });
+              })
+            )
+          ),
+
+          // 4. Speed Slider
+          e('div', { className: 'form-row' },
+            e('label', { htmlFor: 'speedRange' }, 'Scroll Speed: ' + scrollerSettings.speed + ' (Scale 1-10)'),
+            e('input', { 
+              id: 'speedRange', 
+              type: 'range', 
+              min: 1, 
+              max: 10, 
+              value: scrollerSettings.speed, 
+              onInput: function(e){ handleChange('speed', Number(e.target.value)); }, 
+              className: 'range',
+              style: { accentColor: scrollerSettings.color }
+            }),
+            e('div', { style: { display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-muted)' } }, 
+              e('span', null, 'Slow (1)'),
+              e('span', null, 'Fast (10)')
+            )
+          ),
+
+          // 5. Blink Feature Toggle
+          e('div', { className: 'form-row' },
+              e('div', { className: 'toggle-switch-container' },
+                  e('span', { className: 'toggle-label' }, 'Enable Blink/Flash Effect'),
+                  e('div', { className: 'toggle-switch' },
+                      e('input', { 
+                          type: 'checkbox', 
+                          id: 'blinkToggle', 
+                          checked: scrollerSettings.blinkEnabled,
+                          onChange: handleToggleBlink 
+                      }),
+                      e('label', { htmlFor: 'blinkToggle' })
+                  )
               )
           ),
 
@@ -327,19 +320,16 @@
     // Main rendering logic to switch between views
     return e(React.Fragment, null, 
       // Splash screen logic
-      splashPhase !== 'HIDDEN' ? e('div', { 
-        id: 'splash',
-        className: splashPhase === 'FADING_OUT' ? 'splash-fade-out' : ''
-      }, e('h1', {style: {fontFamily: '"Press Start 2P"', color: 'var(--accent)'}}, 'LED Scroller by DRACOiNC Techs')) : null, 
+      showSplash ? e('div', { id: 'splash' }, e('h1', { style: { fontFamily: '"Press Start 2P"' } }, 'LED Scroller')) : null, 
       
       // Switch between display and input screens
       scrollerSettings.showScroller 
-        ? e(LEDScrollerDisplay, { // Pass props to the memoized component
+        ? e(LEDScrollerDisplay, {
             text: scrollerSettings.text,
             speed: scrollerSettings.speed,
             color: scrollerSettings.color,
             blinkEnabled: scrollerSettings.blinkEnabled,
-            onHideScroller: handleHideScroller // Pass the function down
+            onHideScroller: handleHideScroller
           }) 
         : e(InputScreen)
     );
