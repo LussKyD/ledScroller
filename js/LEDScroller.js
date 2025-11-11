@@ -193,8 +193,13 @@ function App(){
 
         // 3. Color Selector
         e('div', { className: 'form-row' },
-          e('label', { htmlFor: 'colorPick' }, 'LED Color'),
-          e('div', { id: 'colorPick', className: 'color-pick', role: 'group', 'aria-label': 'LED color options' },
+          e('label', { htmlFor: 'colorPickContainer' }, 'LED Color'), // FIX: Pointing to the new ID below
+          e('div', { 
+            id: 'colorPickContainer', // FIX: Added container ID to match label
+            className: 'color-pick', 
+            role: 'group', 
+            'aria-label': 'LED color options' 
+          },
             COLOR_OPTIONS.map(function(opt){
               return e('button', {
                 key: opt.hex,
@@ -217,7 +222,7 @@ function App(){
         e('div', { className: 'form-row' },
           e('label', { htmlFor: 'speedRange' }, 'Scroll Speed: ' + scrollerSettings.speed + ' (Scale 1-10)'),
           e('input', { 
-            id: 'speedRange', 
+            id: 'speedRange', // This ID already existed and matched the label
             type: 'range', 
             min: 1, 
             max: 10, 
