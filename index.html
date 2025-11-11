@@ -11,6 +11,7 @@
   <link rel="stylesheet" href="./css/style.css">
 
 <script>
+// Check for and apply saved theme preference before the body loads
 (function(){
   try {
     var t = localStorage.getItem('led_theme');
@@ -24,6 +25,9 @@
 <body class="font-inter transition-theme">
   <div id="root"></div>
   <script src="./js/LEDScroller.js"></script>
-  <footer style="position:fixed;left:12px;bottom:8px;font-size:12px;opacity:0.75;color:inherit">LED Scroller by DRACOiNC Techs v0.3.1</footer>
+
+  <footer style="position:fixed;left:12px;bottom:8px;font-size:12px;opacity:0.75;color:inherit">
+    &copy; 2025 DRACOiNC Techs
+  </footer>
 </body>
 </html>
