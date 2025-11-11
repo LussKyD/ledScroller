@@ -117,6 +117,7 @@ function App(){
   }, []);
 
   // --- LED Scroller Display Component ---
+  // The React.memo optimization is postponed until full stability is confirmed.
   function LEDScrollerDisplay(){
     var text = scrollerSettings.text;
     var speed = scrollerSettings.speed;
@@ -166,11 +167,10 @@ function App(){
 
   // --- Input Configuration Screen Component ---
   function InputScreen(){
-    // FIX: Optimized event handler for stability. 
-    // This function will be defined once per render, but it keeps the call clean.
-    const handleTextareaInput = useCallback((ev) => {
+    // Using the direct inline function ensures stability in this UMD environment
+    const handleTextareaInput = (ev) => {
         handleChange('text', ev.target.value);
-    }, [handleChange]);
+    };
 
     return e('div', { className: 'app-center' },
       // Theme Toggle button (Top Right)
@@ -195,7 +195,7 @@ function App(){
           e('textarea', { 
             id: 'marqueeText', 
             value: scrollerSettings.text, 
-            // USING handleTextareaInput for cleaner, more stable input update
+            // RESTORED: Simple inline function for stability in UMD/vanilla React environment
             onInput: handleTextareaInput, 
             placeholder: 'Enter the text to scroll...' 
           })
@@ -301,7 +301,107 @@ function App(){
 }
 
 var rootEl = document.getElementById('root');
-ReactDOM.createRoot(rootEl).render(React.createElement(App));
+ReactDOM.createRoot(rootEl).render(React.createElement(App));const e = React.createElement;
+const { useState, useEffect, useCallback } = React;
+
+// Define the available scrolling colors and their hex codes
+const COLOR_OPTIONS = [
+  { name: 'Red', hex: '#EF4444' },
+  { name: 'Green', hex: '#10B981' },
+  { name: 'Blue', hex: '#3B82F6' },
+  { name: 'Yellow', hex: '#F59E0B' },
+  { name: 'White', hex: '#FFFFFF' },
+];
+
+// Helper function to calculate contrast color for buttons
+function contrast(hex){
+    if(!hex) return '#fff';
+    var c = hex.replace('#','');
+    var r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+    var brightness = (r*299 + g*587 + b*114) / 1000;
+    return brightness > 150 ? '#000' : '#fff';
+}
+
+
+/**
+ * The main component that manages the app state and switches between
+ * the Input Screen and the Scroller Display.
+ * It now handles all theme and persistence logic.
+ */
+function App(){
+  const [darkMode, setDarkMode] = useState(true);
+  const [showSplash, setShowSplash] = useState(true);
+  const [errorMessage, setErrorMessage] = useState(''); // New state for error messages
+  
+  // Initialize state with values from localStorage, falling back to defaults
+  const [scrollerSettings, setScrollerSettings] = useState(function(){
+    try {
+      // Use '1' for true, '0' for false for localStorage boolean compatibility
+      var storedBlink = localStorage.getItem('led_blink') === '1';
+
+      return {
+        text: localStorage.getItem('led_message') || 'Hello World!',
+        speed: Number(localStorage.getItem('led_speed')) || 5,
+        color: localStorage.getItem('led_color') || '#EF4444',
+        blinkEnabled: storedBlink, // NEW STATE: Blink
+        showScroller: false
+      };
+    } catch(e) {
+      return { text: 'Hello World!', speed: 5, color: '#EF4444', blinkEnabled: false, showScroller: false };
+    }
+  });
+
+  // 1. Initial Theme Setup and Splash Screen
+  useEffect(function(){
+    try {
+      var stored = localStorage.getItem('led_theme');
+      var isDark = stored !== 'light';
+      setDarkMode(isDark);
+      if(!isDark) document.body.classList.add('light');
+    } catch(e){ /* ignore storage errors */ }
+    
+    // Set splash screen timer
+    var t = setTimeout(function(){ setShowSplash(false); }, 1200);
+    return function(){ clearTimeout(t); };
+  }, []);
+
+  // 2. Theme Persistence (Sync body class and localStorage whenever darkMode changes)
+  useEffect(function(){
+    try {
+      if(darkMode){ 
+        document.body.classList.remove('light'); 
+        document.documentElement.classList.remove('light');
+        localStorage.setItem('led_theme','dark'); 
+      } else { 
+        document.body.classList.add('light'); 
+        document.documentElement.classList.add('light');
+        localStorage.setItem('led_theme','light'); 
+      }
+    } catch(e){ /* ignore */ }
+  }, [darkMode]);
+
+  // 3. Persist Scroller Settings on change
+  useEffect(function(){
+    try {
+      localStorage.setItem('led_message', scrollerSettings.text);
+      localStorage.setItem('led_speed', scrollerSettings.speed);
+      // Persist blink setting (1 or 0)
+      localStorage.setItem('led_blink', scrollerSettings.blinkEnabled ? '1' : '0');
+      localStorage.setItem('led_color', scrollerSettings.color);
+    } catch(e) { /* ignore */ }
+  }, [scrollerSettings.text, scrollerSettings.speed, scrollerSettings.color, scrollerSettings.blinkEnabled]);
+
+
+  var handleChange = useCallback(function(name, value){
+    setScrollerSettings(function(prev){
+      var copy = Object.assign({}, prev);
+      copy[name] = value;
+      // Clear error message if text input is modified
+      if(name === 'text' && value.trim().length > 0) setErrorMessage('');
+      return copy;
+    });
+  }, []);
+
   var handleToggleBlink = useCallback(function(){
       setScrollerSettings(function(prev){ return Object.assign({}, prev, { blinkEnabled: !prev.blinkEnabled }); });
   }, []);
@@ -320,6 +420,7 @@ ReactDOM.createRoot(rootEl).render(React.createElement(App));
   }, []);
 
   // --- LED Scroller Display Component ---
+  // The React.memo optimization is postponed until full stability is confirmed.
   function LEDScrollerDisplay(){
     var text = scrollerSettings.text;
     var speed = scrollerSettings.speed;
@@ -369,6 +470,11 @@ ReactDOM.createRoot(rootEl).render(React.createElement(App));
 
   // --- Input Configuration Screen Component ---
   function InputScreen(){
+    // Using the direct inline function ensures stability in this UMD environment
+    const handleTextareaInput = (ev) => {
+        handleChange('text', ev.target.value);
+    };
+
     return e('div', { className: 'app-center' },
       // Theme Toggle button (Top Right)
       e('div', { className: 'top-right' },
@@ -392,7 +498,8 @@ ReactDOM.createRoot(rootEl).render(React.createElement(App));
           e('textarea', { 
             id: 'marqueeText', 
             value: scrollerSettings.text, 
-            onInput: function(ev){ handleChange('text', ev.target.value); }, 
+            // RESTORED: Simple inline function for stability in UMD/vanilla React environment
+            onInput: handleTextareaInput, 
             placeholder: 'Enter the text to scroll...' 
           })
         ),
