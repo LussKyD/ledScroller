@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LED Scroller by DRACOiNC Techs v0.2.7-fix-1</title>
+  <title>LED Scroller by DRACOiNC Techs v0.2.7-fix-1 (Fixed)</title>
   <link rel="icon" href="./assets/favicon.ico" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -14,7 +14,7 @@
 (function(){
   try {
     var t = localStorage.getItem('led_theme');
-    // We keep this to apply theme on DOM load before React initializes
+    // Ensure both html and body get the class for full compatibility
     if (t === 'light') { document.documentElement.classList.add('light'); document.body.classList.add('light'); }
   } catch(e) {}
 })();
@@ -24,8 +24,8 @@
 <body class="font-inter transition-theme">
   <div id="root"></div>
   <script src="./js/LEDScroller.js"></script>
-  <footer style="position:fixed;left:12px;bottom:8px;font-size:12px;opacity:0.75;color:inherit">LED Scroller by DRACOiNC Techs v0.2.7-fix-1 (Fixed)</footer>
   <script src="./js/adaptive-theme-v026.js"></script>
-  <script src="script.js"></script>
+  
+  <footer style="position:fixed;left:12px;bottom:8px;font-size:12px;opacity:0.75;color:inherit">LED Scroller by DRACOiNC Techs v0.2.7-fix-1 (Fixed)</footer>
 </body>
 </html>
