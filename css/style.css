@@ -9,17 +9,20 @@
   /* Global Colors */
   --accent: #4f46e5;
   --red-led: #ff2d2d;
-
+  --grid-dot-color: rgba(255, 255, 255, 0.08); /* White dot color for dark mode */
+  
   /* --- DARK MODE (Default) --- */
   --bg-main: #0f1724; /* Background body color */
   --text-main: #e6eef8; /* Primary text color */
   --text-muted: #9aa8bf; /* Label/helper text color */
   --card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  --scroller-bg-color: #000000;
   
   /* --- LIGHT MODE (Overridden by .light class) --- */
   --bg-light: #f3f4f6;
   --text-light: #0b1220;
   --card-light: #ffffff;
+  --grid-dot-color-light: rgba(0, 0, 0, 0.06); /* Dark dot color for light mode */
 }
 
 /* Global Reset and Base Layout */
@@ -128,7 +131,6 @@ label {
   font-size: 14px;
   color: var(--text-muted);
   margin-bottom: 6px;
-  /* Light mode label color is handled by LEDScroller.js for contrast */
 }
 
 /* Textarea and other input fields */
@@ -186,6 +188,49 @@ input[type="range"] {
   transition: opacity 150ms ease, background-color 150ms ease;
 }
 
+/* Toggle Switch (for Blink) */
+.toggle-switch-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+.toggle-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.toggle-switch input {
+  display: none;
+}
+.toggle-switch label {
+  display: inline-block;
+  width: 50px;
+  height: 25px;
+  background: var(--text-muted);
+  border-radius: 15px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+.toggle-switch label::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 19px;
+  height: 19px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.3s;
+}
+.toggle-switch input:checked + label {
+  background: var(--accent);
+}
+.toggle-switch input:checked + label::after {
+  transform: translateX(25px);
+}
+
 /*
  * --------------------------------
  * 4. SCROLLER DISPLAY STYLES
@@ -200,11 +245,20 @@ input[type="range"] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #000; /* True black for LED effect */
+  background: var(--scroller-bg-color); /* True black for LED effect */
   color: #fff;
   padding: 40px 20px;
   transition: background 300ms ease, color 300ms ease;
   overflow: hidden;
+  
+  /* DOT MATRIX GRID BACKGROUND (Simulates unlit diodes) */
+  background-image: radial-gradient(var(--grid-dot-color) 1.5px, transparent 1px);
+  background-size: 12px 12px;
+}
+
+body.light .scroller-full {
+  background: var(--bg-light);
+  background-image: radial-gradient(var(--grid-dot-color-light) 1.5px, transparent 1px);
 }
 
 /* Track for the scrolling animation */
@@ -219,10 +273,10 @@ input[type="range"] {
 }
 
 /* Text element that simulates the LED Dot-Matrix */
-/* The actual colors and shadows are injected by React via <style> tag */
 .led-text {
   display: inline-block;
-  font-weight: 900;
+  font-family: 'Press Start 2P', monospace; /* The new pixel font */
+  font-weight: 400; /* Pixel fonts often don't support bold */
   user-select: none;
   /* Font size and spacing are now responsive and dynamically set */
   /* text-shadow handles the glow effect */
@@ -230,9 +284,19 @@ input[type="range"] {
 
 /*
  * --------------------------------
- * 5. ACCESSIBILITY & UTILITIES
+ * 5. ANIMATIONS & UTILITIES
  * --------------------------------
  */
+
+/* Blink Effect Keyframes */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.1; }
+}
+
+.animate-blink {
+  animation: blink 0.5s step-end infinite;
+}
 
 /* Responsive adjustment for small screens */
 @media (max-width: 600px) {
@@ -252,7 +316,7 @@ input:focus-visible {
   border-radius: 8px;
 }
 
-/* Keyframes */
+/* Fade out keyframes */
 @keyframes fadeOut {
   to {
     opacity: 0;
