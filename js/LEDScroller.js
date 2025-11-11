@@ -10,12 +10,106 @@
     { name: 'White', hex: '#FFFFFF' },
   ];
 
+  // --- BEGIN NON-REACT UTILITY FUNCTIONS (Adapted from adaptive-theme-v026.js) ---
+
+  // Converts RGB string to HEX (useful if browser returns RGB for color style)
+  function toHexFromRgbString(rgb){
+    if(!rgb) return null;
+    try{
+      if(rgb.indexOf('#')===0) return rgb;
+      var nums = rgb.replace(/rgba?\(|\)|\s/g,'').split(',');
+      if(nums.length<3) return null;
+      var r = parseInt(nums[0]), g = parseInt(nums[1]), b = parseInt(nums[2]);
+      return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1);
+    }catch(e){ return null; }
+  }
+  
+  // Calculates white or black text color for maximum contrast
+  function contrast(hex){
+    if(!hex) return '#fff';
+    var c = hex.replace('#','');
+    var r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
+    var brightness = (r*299 + g*587 + b*114) / 1000;
+    return brightness > 150 ? '#000' : '#fff';
+  }
+  
+  // Ensures labels are properly associated with inputs for accessibility
+  function fixLabelAssociations(){
+    document.querySelectorAll('.form-row').forEach(function(row, idx){
+      var label = row.querySelector('label');
+      if(!label) return;
+      var control = row.querySelector('input, textarea, select, [role="group"]');
+      if(control){
+        if(!control.id) control.id = 'formctrl-' + idx;
+        if(!label.getAttribute('for')) label.setAttribute('for', control.id);
+        
+        // Ensure initial color selection button is marked 'selected'
+        if(control.id === 'colorGroup'){
+            var storedColor = localStorage.getItem('led_color') || '#EF4444';
+            control.querySelectorAll('[data-led-color]').forEach(function(b){
+                b.classList.remove('selected');
+                if (b.getAttribute('data-led-color') === storedColor) {
+                    b.classList.add('selected');
+                }
+            });
+        }
+      }
+    });
+  }
+  
+  // Applies the user's selected LED color to the "Show Scroller" button
+  function applyLedColor(color){
+    if(!color) return;
+    if(color.indexOf('rgb')===0) color = toHexFromRgbString(color);
+    
+    // Target the primary "Show Scroller" button
+    var btn = document.querySelector('.show-scroller-btn');
+    if(btn){ 
+      btn.style.backgroundColor = color; 
+      btn.style.color = contrast(color); 
+    }
+  }
+
+  // Set up listeners for color selection and theme toggle
+  function attachListeners(){
+    document.addEventListener('click', function(e){
+      var t = e.target;
+      
+      // Handle color button selection style and button coloring
+      if(t && t.matches && (t.matches('[data-led-color]') || t.classList.contains('color-btn'))){
+        var color = t.getAttribute('data-led-color') || t.getAttribute('value') || t.style.backgroundColor;
+        
+        if(color){ 
+          // Update the button color immediately based on the new selection
+          applyLedColor(color); 
+        }
+        
+        // Update selection class
+        document.querySelectorAll('[data-led-color]').forEach(function(b){ b.classList.remove('selected'); });
+        try{ t.classList.add('selected'); }catch(e){}
+      }
+      
+      // Theme toggle is handled by React, but we re-apply button color when the theme changes
+      if(t && t.classList.contains('theme-toggle')){
+        // Use a timeout to ensure React has updated localStorage before reading the color
+        setTimeout(function(){ 
+            applyLedColor(localStorage.getItem('led_color') || '#4f46e5'); 
+        }, 120);
+      }
+    }, true);
+  }
+
+  // --- END NON-REACT UTILITY FUNCTIONS ---
+
+
+  // --- BEGIN REACT APP ---
+
   function App(){
     // FIX: Initialize state with localStorage values or defaults
     const [darkMode, setDarkMode] = useState(function(){
       try {
         var stored = localStorage.getItem('led_theme');
-        // Default to dark mode if nothing is set or stored value is invalid
+        // Default to dark mode if nothing is set
         return stored === 'light' ? false : true; 
       } catch(e) { return true; }
     });
@@ -107,7 +201,7 @@
       if (!text.trim()) {
         return e('div', { className: 'scroller-full' }, 
           e('h1', { style: { color: 'white' } }, 'No Message Input.'),
-          e('button', { onClick: handleHideScroller, className: 'button-primary', style: { marginTop: '18px', width: 'auto', padding: '10px 18px', background:'#ef4444' } }, 'Exit Config')
+          e('button', { onClick: handleHideScroller, className: 'button-primary exit-config-btn', style: { marginTop: '18px', width: 'auto', padding: '10px 18px', background:'#ef4444' } }, 'Exit Config')
         );
       }
       
@@ -197,6 +291,24 @@
     );
   }
 
+  // --- END REACT APP ---
+
+  // Initialize React
   var rootEl = document.getElementById('root');
   ReactDOM.createRoot(rootEl).render(React.createElement(App));
+  
+  // FIX: Run non-React DOM manipulation after React mounts
+  document.addEventListener('DOMContentLoaded', function(){
+    try{ 
+      // 1. Fix accessibility IDs/labels
+      fixLabelAssociations(); 
+      // 2. Attach listeners for dynamic button styling
+      attachListeners(); 
+      
+      // 3. Re-apply button color after React has rendered (using the persisted color)
+      setTimeout(function(){ 
+        applyLedColor(localStorage.getItem('led_color') || '#4f46e5');
+      }, 500);
+    }catch(e){ console.error('Combined JS init error', e); }
+  });
 })();
