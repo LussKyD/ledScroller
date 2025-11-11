@@ -14,6 +14,7 @@
 (function(){
   try {
     var t = localStorage.getItem('led_theme');
+    // We will set the body class to control initial theme state
     if (t === 'light') { document.documentElement.classList.add('light'); document.body.classList.add('light'); }
   } catch(e) {}
 })();
@@ -23,9 +24,8 @@
 <body class="font-inter transition-theme">
   <div id="root"></div>
   <script src="./js/LEDScroller.js"></script>
-  <script src="./js/adaptive-theme.js"></script>
+  <!-- REMOVED REDUNDANT/CONFLICTING JS FILES -->
 
   <footer style="position:fixed;left:12px;bottom:8px;font-size:12px;opacity:0.75;color:inherit">LED Scroller by DRACOiNC Techs v0.2.6</footer>
-  <script src="./js/adaptive-theme-v026.js"></script>
 </body>
 </html>
