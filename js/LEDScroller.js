@@ -10,7 +10,7 @@
     { name: 'White', hex: '#FFFFFF' },
   ];
 
-  // --- BEGIN NON-REACT UTILITY FUNCTIONS (Adapted from adaptive-theme-v026.js) ---
+  // --- BEGIN NON-REACT UTILITY FUNCTIONS (For Button Contrast & Accessibility) ---
 
   // Converts RGB string to HEX (useful if browser returns RGB for color style)
   function toHexFromRgbString(rgb){
@@ -30,7 +30,8 @@
     var c = hex.replace('#','');
     var r = parseInt(c.substr(0,2),16), g = parseInt(c.substr(2,2),16), b = parseInt(c.substr(4,2),16);
     var brightness = (r*299 + g*587 + b*114) / 1000;
-    return brightness > 150 ? '#000' : '#fff';
+    // Lower threshold for better contrast on lighter colors
+    return brightness > 180 ? '#000' : '#fff'; 
   }
   
   // Ensures labels are properly associated with inputs for accessibility
@@ -182,9 +183,20 @@
 
     function LEDScrollerDisplay(){
       const { text, speed, color } = scrollerSettings;
+      
+      // 1. Implement 3-second delay state
+      const [isScrolling, setIsScrolling] = useState(false);
+      useEffect(function(){
+          setIsScrolling(false); // Reset when component mounts
+          const delayTimer = setTimeout(function(){
+              setIsScrolling(true);
+          }, 3000); // 3 second delay
+          return function(){ clearTimeout(delayTimer); };
+      }, [text, speed, color]); // Rerun effect if settings change
 
       // Calculate duration: 25s for speed=1, 5s for speed=10.
       const durationSeconds = 25 - (speed * 2);
+      const animationClass = isScrolling ? 'animate-scroller' : 'paused';
 
       // Dynamically generated style tag for LED glow
       const styleTag = e('style', { dangerouslySetInnerHTML: {
@@ -208,13 +220,16 @@
       // Render the scroller
       return e('div', { className: 'scroller-full' },
         styleTag,
-        e('div', { className: 'scroll-track' },
-          e('div', { className: 'animate-scroller led-text', style: { '--scroller-duration': durationSeconds + 's' } },
-            // Text is repeated three times to ensure continuous scrolling
-            e('span', { style: { marginRight: '20vw' } }, text.toUpperCase() ),
-            e('span', { style: { marginRight: '20vw' } }, text.toUpperCase() ),
-            e('span', null, text.toUpperCase() )
-          )
+        e('div', { className: 'scroll-track-container' }, // New container for LED grid look
+            e('div', { className: 'scroll-track' },
+                // Only apply animation class after the delay
+                e('div', { className: `${animationClass} led-text`, style: { '--scroller-duration': durationSeconds + 's' } },
+                    // Text is repeated three times to ensure continuous scrolling
+                    e('span', { style: { marginRight: '20vw' } }, text.toUpperCase() ),
+                    e('span', { style: { marginRight: '20vw' } }, text.toUpperCase() ),
+                    e('span', null, text.toUpperCase() )
+                )
+            )
         ),
         // Exit config button
         e('button', { onClick: handleHideScroller, className: 'button-primary exit-config-btn', style: { marginTop: '18px', width: 'auto', padding: '10px 18px', background:'#ef4444' } }, 'Exit Config')
@@ -222,7 +237,30 @@
     }
 
     function InputScreen(){
+        const currentColor = scrollerSettings.color;
+        
+        // 2. Dynamic Scrollbar/Range Input Styling (Adaptable Speed Slider)
+        const scrollbarStyleTag = e('style', { dangerouslySetInnerHTML: {
+            __html: `
+                /* Thumb Color */
+                input[type="range"]::-webkit-slider-thumb {
+                    background: ${currentColor};
+                }
+                input[type="range"]::-moz-range-thumb {
+                    background: ${currentColor};
+                }
+                /* Optional: Color the track slightly */
+                input[type="range"]::-webkit-slider-runnable-track {
+                    background: ${currentColor}33; 
+                }
+                input[type="range"]::-moz-range-track {
+                    background: ${currentColor}33; 
+                }
+            `
+        }});
+
       return e('div', { className: 'app-center' },
+        scrollbarStyleTag, // Inject dynamic range input styles here
         e('div', { className: 'top-right' },
           e('button', { 
             onClick: function(){ setDarkMode(!darkMode); }, 
@@ -297,7 +335,7 @@
   var rootEl = document.getElementById('root');
   ReactDOM.createRoot(rootEl).render(React.createElement(App));
   
-  // FIX: Run non-React DOM manipulation after React mounts
+  // FIX: Run non-React DOM manipulation after React mounts for button contrast and accessibility
   document.addEventListener('DOMContentLoaded', function(){
     try{ 
       // 1. Fix accessibility IDs/labels
@@ -306,8 +344,9 @@
       attachListeners(); 
       
       // 3. Re-apply button color after React has rendered (using the persisted color)
+      // This is crucial for the "Show Scroller" button adaptation
       setTimeout(function(){ 
-        applyLedColor(localStorage.getItem('led_color') || '#4f46e5');
+        applyLedColor(localStorage.getItem('led_color') || '#EF4444');
       }, 500);
     }catch(e){ console.error('Combined JS init error', e); }
   });
