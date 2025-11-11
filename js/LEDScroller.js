@@ -128,7 +128,16 @@
         }
         
         // Define CSS keyframes dynamically for scrolling animation
-        const styleSheet = document.styleSheets[0];
+        // FIX: Safely retrieve the local stylesheet by ID
+        const styleSheetEl = document.getElementById('dynamic-keyframe-style'); 
+        const styleSheet = styleSheetEl ? styleSheetEl.sheet : null;
+        
+        // Bail out if we can't find the dedicated sheet (to prevent SecurityError)
+        if (!styleSheet) {
+            console.error("Could not find dedicated stylesheet for keyframe injection.");
+            return;
+        }
+
         const keyframesName = 'scroll-x';
         
         // Remove existing keyframes to prevent conflicts/duplicates
@@ -140,14 +149,17 @@
         }
         
         // Add new keyframes
-        const textWidth = textRef.current.scrollWidth;
-        const trackWidth = scrollerRef.current.offsetWidth;
-        const keyframeRule = 
-            `@keyframes ${keyframesName} {
-                0% { transform: translateX(${trackWidth}px); }
-                100% { transform: translateX(-${textWidth}px); }
-            }`;
-        styleSheet.insertRule(keyframeRule, styleSheet.cssRules.length);
+        // Check if refs are available before accessing scrollWidth/offsetWidth
+        if (textRef.current && scrollerRef.current) {
+            const textWidth = textRef.current.scrollWidth;
+            const trackWidth = scrollerRef.current.offsetWidth;
+            const keyframeRule = 
+                `@keyframes ${keyframesName} {
+                    0% { transform: translateX(${trackWidth}px); }
+                    100% { transform: translateX(-${textWidth}px); }
+                }`;
+            styleSheet.insertRule(keyframeRule, styleSheet.cssRules.length);
+        }
 
         calculateMetrics();
 
