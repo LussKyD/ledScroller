@@ -28,234 +28,208 @@
 /* Global Reset and Base Layout */
 * {
   box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
   margin: 0;
   padding: 0;
 }
-html, body, #root {
-  height: 100%;
-}
+
 body {
-  font-family: Inter, system-ui, 'Helvetica Neue', Arial, sans-serif;
-  background: var(--bg-main);
+  background-color: var(--bg-main);
   color: var(--text-main);
-  min-height: 100vh;
-  /* Apply dark mode defaults */
-  transition: background-color 400ms ease, color 400ms ease;
+  font-family: 'Inter', sans-serif;
+  display: flex; /* For centering the main app content */
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
 }
 
-/* Light Mode Overrides (controlled by React state and local storage) */
-body.light {
-  background: var(--bg-light);
-  color: var(--text-light);
-}
-
-/* General transition helper for smoother theme switches */
+/* Theme Switching */
 .transition-theme {
-  transition: background-color 420ms ease, color 420ms ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/*
- * --------------------------------
- * 2. APP LAYOUT & CARD STYLES
- * --------------------------------
- */
-
-/* Center the input screen content */
-.app-center {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-}
-
-/* Configuration Card */
-.card {
-  width: 100%;
-  max-width: 720px;
-  background: var(--card-bg); /* Dark mode gradient */
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 8px 30px rgba(2,6,23,0.6);
-}
-
-/* Light mode card override */
-body.light .card {
-  background: var(--card-light);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-}
-
-.header {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-/* Splash screen animation */
-#splash {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-  z-index: 9999;
-  animation: fadeOut 1.2s ease 1.2s forwards;
-}
-#splash h1 {
-  color: var(--red-led);
-  font-weight: 900;
-  font-size: 2rem;
-  text-shadow: 0 0 8px var(--red-led), 0 0 20px rgba(255,45,45,0.4);
-  letter-spacing: 1px;
-}
-
-/*
- * --------------------------------
- * 3. FORM CONTROLS & INPUTS
- * --------------------------------
- */
-
-.top-right {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-}
-.form-row {
-  margin-bottom: 16px;
-}
-
-/* Label Styling */
-label {
-  display: block;
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-
-/* Textarea and other input fields */
-textarea, input[type="range"] + label,
-textarea::placeholder {
-  color: inherit;
-}
-textarea {
-  width: 100%;
-  min-height: 70px;
-  padding: 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
-  resize: none;
-  font-size: 15px;
-}
-/* Light mode input overrides */
-body.light textarea {
-  border-color: #e5e7eb;
-  background: #fff;
+body.light {
+  background-color: var(--bg-light);
   color: var(--text-light);
 }
 
-input[type="range"] {
-  width: 100%;
-}
-
-/* Color Picker Buttons */
-.color-pick {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-.color-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  border: 3px solid rgba(255,255,255,0.06);
-  box-shadow: 0 6px 12px rgba(2,6,23,0.6);
-  cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease;
-}
-
-/* Primary Button (Show Scroller) */
 .button-primary {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  background: var(--accent); /* Overridden by JS based on LED color */
+  padding: 10px 20px;
   border: none;
-  color: #fff; /* Overridden by JS based on LED contrast */
+  border-radius: 8px;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 150ms ease, background-color 150ms ease;
+  transition: opacity 0.2s ease, transform 0.1s ease;
 }
 
-/* Toggle Switch (for Blink) */
-.toggle-switch-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 0;
+.button-primary:hover {
+  opacity: 0.9;
 }
-.toggle-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-main);
-}
-.toggle-switch input {
-  display: none;
-}
-.toggle-switch label {
-  display: inline-block;
-  width: 50px;
-  height: 25px;
-  background: var(--text-muted);
-  border-radius: 15px;
-  position: relative;
-  cursor: pointer;
-  transition: background-color 0.3s;
-}
-.toggle-switch label::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 19px;
-  height: 19px;
-  background: #fff;
-  border-radius: 50%;
-  transition: transform 0.3s;
-}
-.toggle-switch input:checked + label {
-  background: var(--accent);
-}
-.toggle-switch input:checked + label::after {
-  transform: translateX(25px);
+
+.button-primary:active {
+  transform: scale(0.98);
 }
 
 /*
  * --------------------------------
- * 4. SCROLLER DISPLAY STYLES
+ * 2. APP LAYOUT AND CARD
  * --------------------------------
  */
 
-/* Full-Screen Container */
-.scroller-full {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--scroller-bg-color); /* True black for LED effect */
-  color: #fff;
-  padding: 40px 20px;
-  transition: background 300ms ease, color 300ms ease;
-  overflow: hidden;
-  
-  /* DOT MATRIX GRID BACKGROUND (Simulates unlit diodes) */
-  background-image: radial-gradient(var(--grid-dot-color) 1.5px, transparent 1px);
-  background-size: 12px 12px;
+#root {
+  width: 100%;
+  max-width: 500px;
+  padding: 20px;
 }
 
+.card {
+  background: var(--card-bg);
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+body.light .card {
+  background: var(--card-light);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+}
+
+/*
+ * --------------------------------
+ * 3. FORM ELEMENTS
+ * --------------------------------
+ */
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+input[type="text"], input[type="range"] {
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--text-main);
+  font-family: 'Inter', sans-serif;
+  font-size: 1rem;
+}
+
+body.light input[type="text"], body.light input[type="range"] {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.9);
+  color: var(--text-light);
+}
+
+/* Range Slider Styling */
+input[type="range"] {
+  padding: 0;
+  height: 20px;
+  cursor: pointer;
+}
+
+/* Toggle Switch Styles */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--text-muted);
+  transition: .4s;
+  border-radius: 28px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--accent);
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* Color Picker Container */
+.color-picker-container {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.color-option {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: border 0.1s ease;
+}
+
+.color-option.selected {
+  border: 3px solid var(--text-main); /* Highlight selected color */
+}
+
+body.light .color-option.selected {
+  border: 3px solid var(--text-light);
+}
+
+/*
+ * --------------------------------
+ * 4. LED SCROLLER DISPLAY
+ * --------------------------------
+ */
+
+/* Full-screen wrapper for the scroller */
+.scroller-full {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: var(--scroller-bg-color); /* Default Black */
+  /* LED Grid Effect */
+  background-image: radial-gradient(var(--grid-dot-color) 1.5px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 10; /* Above everything else */
+  transition: background-color 0.3s ease;
+}
+
+/* Light mode scroller background (if different from default) */
 body.light .scroller-full {
   background: var(--bg-light);
   background-image: radial-gradient(var(--grid-dot-color-light) 1.5px, transparent 1px);
@@ -280,7 +254,25 @@ body.light .scroller-full {
   user-select: none;
   /* Font size and spacing are now responsive and dynamically set */
   /* text-shadow handles the glow effect */
+  
+  /* THIS IS THE ONLY STATIC SCROLL ANIMATION */
+  animation: scroll var(--scroll-duration, 5s) linear infinite;
 }
+
+/* * The @keyframes for the scroll animation is now STATIC.
+ * We use a CSS variable for duration (set in LEDScroller.js). 
+ * This prevents the keyframe injection issue.
+ */
+@keyframes scroll {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    /* Scroller text moves from right (100%) to fully off the left side (-100%) */
+    transform: translateX(calc(-100% - var(--text-width))); 
+  }
+}
+
 
 /*
  * --------------------------------
@@ -298,28 +290,49 @@ body.light .scroller-full {
   animation: blink 0.5s step-end infinite;
 }
 
+/* SPLASH SCREEN FADE OUT ANIMATION */
+#splash {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    z-index: 100; /* Highest priority */
+    opacity: 1;
+    transition: opacity 0.3s ease-out; /* Add transition for a smooth fade */
+}
+
+/* Class applied by React to trigger the fade out */
+#splash.splash-fade-out {
+    opacity: 0;
+}
+
+body.light #splash {
+    background-color: var(--bg-light);
+    color: var(--text-light);
+}
+
 /* Responsive adjustment for small screens */
 @media (max-width: 600px) {
   /* Increase font size slightly on mobile for better visibility */
   .led-text {
     font-size: 14vw;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.05em; /* Tighter on small screens */
+  }
+  
+  .card {
+    padding: 15px;
   }
 }
 
-/* Accessible focus styling */
-button:focus-visible,
-textarea:focus-visible,
-input:focus-visible {
-  outline: 3px solid rgba(79,70,229,0.5);
-  outline-offset: 2px;
-  border-radius: 8px;
-}
-
-/* Fade out keyframes */
-@keyframes fadeOut {
-  to {
-    opacity: 0;
-    visibility: hidden;
+/* Responsive adjustment for very large screens (if needed) */
+@media (min-width: 1024px) {
+  .led-text {
+    font-size: 10vw;
   }
 }
