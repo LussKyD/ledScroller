@@ -1,3 +1,33 @@
+
+/* Theme and LED color helpers added by fix script */
+(function(){
+  function setCssVar(name, value){
+    try{ document.documentElement.style.setProperty(name, value); }catch(e){}
+  }
+  window.__ledSetColor = function(hex){
+    setCssVar('--led-color', hex);
+    // compute a subtle preview tint rgba from hex
+    try{
+      // convert hex to rgba with low alpha
+      var h = hex.replace('#','');
+      if(h.length===3) h = h.split('').map(c=>c+c).join('');
+      var r = parseInt(h.substring(0,2),16);
+      var g = parseInt(h.substring(2,4),16);
+      var b = parseInt(h.substring(4,6),16);
+      setCssVar('--preview-tint', 'rgba('+r+','+g+','+b+',0.06)');
+    }catch(e){}
+  };
+  // prevent accidental theme reset on input events by stopping propagation where appropriate
+  document.addEventListener('input', function(e){
+    var t = e.target;
+    if(t && t.type && t.type === 'color'){
+      // ensure theme attribute is preserved on documentElement
+      var current = document.documentElement.getAttribute('data-theme');
+      if(current) document.documentElement.// fixed: ensure this isn't called by color change -> setAttribute('data-theme', current);
+    }
+  }, true);
+})();
+
 (function(){
   const e = React.createElement;
   const { useState, useEffect, useCallback } = React;
@@ -133,3 +163,21 @@ const updateScrollerTheme = () => {
 
 document.querySelector('.theme-toggle')?.addEventListener('click', updateScrollerTheme);
 updateScrollerTheme();
+
+
+/* Init: hook color inputs to update CSS vars without touching theme */
+(function(){
+  try{
+    var colorInputs = document.querySelectorAll('input[type="color"]');
+    colorInputs.forEach(function(inp){
+      // ensure id present
+      if(!inp.id) inp.id = 'color-' + Math.random().toString(36).slice(2,8);
+      inp.addEventListener('input', function(e){
+        window.__ledSetColor(e.target.value);
+      }, {passive:true});
+    });
+    // also set initial value if present on page
+    var first = colorInputs[0];
+    if(first && first.value) window.__ledSetColor(first.value);
+  }catch(e){}
+})();
