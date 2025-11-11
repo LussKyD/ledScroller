@@ -7,11 +7,13 @@
   --red-led: #ff2d2d;
   --text-dark: #e6eef8;
   --text-light: #0b1220;
+  /* New CSS variables for range input track/thumb */
+  --range-track-color: rgba(255,255,255,0.2);
+  --range-thumb-color: var(--accent); /* Default, will be overridden by JS */
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body,#root{height:100%}
-body{font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial; background:var(--bg-dark); 
-     color:var(--text-dark); min-height:100vh; transition:background-color 400ms ease, color 400ms ease;}
+body{font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial; background:var(--bg-dark); color:var(--text-dark); min-height:100vh; transition:background-color 400ms ease, color 400ms ease;}
 body.light{background:var(--bg-light); color:var(--text-light);}
 
 /* theme transition helper */
@@ -19,8 +21,7 @@ body.light{background:var(--bg-light); color:var(--text-light);}
 
 /* Card + layout */
 .app-center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
-.card{width:100%;max-width:720px;background:linear-gradient(180deg, rgba(255,255,255,0.02), 
-      rgba(255,255,255,0.06));border-radius:18px;backdrop-filter:blur(8px);padding:32px;position:relative}
+.card{width:100%;max-width:720px;background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.06));border-radius:18px;backdrop-filter:blur(8px);padding:32px;position:relative}
 body.light .card{background:var(--card-light);box-shadow:0 12px 24px rgba(17,24,39,0.08);border:1px solid #e5e7eb}
 
 /* Splash screen */
@@ -39,7 +40,50 @@ body.light label{color:var(--text-light);}
 
 textarea{width:100%;min-height:70px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:inherit;resize:none;font-size:15px;}
 body.light textarea{border-color:#e5e7eb; background:#fff; color:var(--text-light);}
-input[type="range"]{width:100%}
+
+/* Range Input Styling - Base (to be dynamically colored by React JS) */
+input[type="range"]{
+    width:100%;
+    -webkit-appearance: none;
+    background: transparent;
+}
+/* Track styling */
+input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 12px;
+    cursor: pointer;
+    background: var(--range-track-color);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+input[type="range"]::-moz-range-track {
+    width: 100%;
+    height: 12px;
+    cursor: pointer;
+    background: var(--range-track-color);
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Thumb styling */
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: var(--range-thumb-color); /* Overridden by JS */
+    cursor: pointer;
+    margin-top: -5px; /* Adjust to center thumb on track */
+    box-shadow: 0 0 4px rgba(0,0,0,0.4);
+}
+input[type="range"]::-moz-range-thumb {
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: var(--range-thumb-color); /* Overridden by JS */
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 0 4px rgba(0,0,0,0.4);
+}
 
 .color-pick{display:flex;gap:8px;flex-wrap:wrap}
 .color-btn{width:36px;height:36px;border-radius:999px;box-shadow:0 6px 12px rgba(2,6,23,0.6);cursor:pointer;border:3px solid transparent}
@@ -52,9 +96,44 @@ body.light .color-btn.selected{border-color:var(--text-light)}
 
 /* Scroller display */
 .scroller-full{position:fixed;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;background:#000;color:#fff;padding:40px 20px}
-.scroll-track{width:100%;overflow:hidden;white-space:nowrap}
-/* Increased letter-spacing and reduced blur for clarity */
-.led-text{display:inline-block;font-weight:900;font-size:9vw;letter-spacing:0.12em;user-select:none;text-shadow:0 0 6px, 0 0 10px, 0 0 12px, 0 0 16px, 0 0 20px;}
+
+/* LED Screen look (More LED Like) */
+.scroll-track-container{
+    width:100%;
+    height: 15vw; /* Fixed height for LED screen look */
+    max-height: 200px;
+    overflow: hidden;
+    /* Simulate LED grid effect */
+    background-color: #0a0a0a; 
+    background-image: 
+        linear-gradient(0deg, transparent 49%, rgba(0, 0, 0, 0.4) 50%, transparent 51%), 
+        linear-gradient(90deg, transparent 49%, rgba(0, 0, 0, 0.4) 50%, transparent 51%);
+    background-size: 0.5vw 0.5vw;
+    border-radius: 8px;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.9);
+    margin: 0 auto;
+    position: relative; 
+}
+
+.scroll-track{
+    width:100%;
+    white-space:nowrap;
+    /* Vertical centering for the text inside the track */
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+/* Increased letter-spacing, box shadow for segmented/square look */
+.led-text{
+    display:inline-block;
+    font-weight:900;
+    font-size: 14vw; /* Make font massive */
+    line-height: 1;
+    letter-spacing:0.18em; /* Wider gap for segmented look */
+    user-select:none;
+    /* Apply glow/shadow dynamically by JS */
+}
 
 @keyframes scroll {
   0% { transform: translate3d(0, 0, 0); }
@@ -63,4 +142,9 @@ body.light .color-btn.selected{border-color:var(--text-light)}
 
 .animate-scroller {
   animation: scroll var(--scroller-duration, 20s) linear infinite;
+}
+
+/* State for the initial delay (3-second wait) */
+.paused {
+    animation-play-state: paused;
 }
