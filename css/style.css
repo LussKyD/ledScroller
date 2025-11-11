@@ -2,18 +2,19 @@
  * --------------------------------
  * 1. THEME VARIABLES & BASE STYLES
  * --------------------------------
+ * This section defines colors and transitions for both Dark (default) and Light modes.
  */
 
 :root {
   /* Global Colors */
   --accent: #4f46e5;
   --red-led: #ff2d2d;
-  --grid-dot-color: rgba(255, 255, 255, 0.08); 
+  --grid-dot-color: rgba(255, 255, 255, 0.08); /* White dot color for dark mode */
   
   /* --- DARK MODE (Default) --- */
-  --bg-main: #0f1724;
-  --text-main: #e6eef8;
-  --text-muted: #9aa8bf;
+  --bg-main: #0f1724; /* Background body color */
+  --text-main: #e6eef8; /* Primary text color */
+  --text-muted: #9aa8bf; /* Label/helper text color */
   --card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   --scroller-bg-color: #000000;
   
@@ -21,217 +22,231 @@
   --bg-light: #f3f4f6;
   --text-light: #0b1220;
   --card-light: #ffffff;
-  --grid-dot-color-light: rgba(0, 0, 0, 0.06);
-  
-  /* Scroller CSS Variable (Set by JS) */
-  --scroll-duration: 15s; /* Default duration */
+  --grid-dot-color-light: rgba(0, 0, 0, 0.06); /* Dark dot color for light mode */
+
+  /* Fallback LED Color */
+  --led-color: var(--red-led); 
 }
 
 /* Global Reset and Base Layout */
 * {
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 html, body, #root {
   height: 100%;
+  margin: 0;
+  padding: 0;
 }
 body {
-  font-family: Inter, system-ui, 'Helvetica Neue', Arial, sans-serif;
-  background: var(--bg-main);
+  background-color: var(--bg-main);
   color: var(--text-main);
-  min-height: 100vh;
-  transition: background-color 400ms ease, color 400ms ease;
+  font-family: 'Inter', sans-serif;
 }
-
-/* Light Mode Overrides */
-body.light {
-  background: var(--bg-light);
-  color: var(--text-light);
-}
-
 .transition-theme {
-  transition: background-color 420ms ease, color 420ms ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Light Theme Overrides */
+.light {
+  --bg-main: var(--bg-light);
+  --text-main: var(--text-light);
+  --text-muted: #6b7280;
+  --card-bg: var(--card-light);
+  --scroller-bg-color: #ffffff;
 }
 
 /*
  * --------------------------------
- * 2. APP LAYOUT & CARD STYLES
+ * 2. COMPONENT STYLES (Card/Form)
  * --------------------------------
  */
 
-.app-center {
-  min-height: 100vh;
+/* Main application container */
+.app-container {
   display: flex;
-  align-items: center;
   justify-content: center;
-  padding: 1rem;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
 }
 
-.card {
+/* Configuration Card */
+.config-card {
   width: 100%;
-  max-width: 720px;
+  max-width: 480px;
   background: var(--card-bg);
   border-radius: 16px;
   padding: 24px;
-  box-shadow: 0 8px 30px rgba(2,6,23,0.6);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.light .config-card {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
-body.light .card {
-  background: var(--card-light);
-  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
-}
-
-.header {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
-}
-
-/* Splash screen animation */
-#splash {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-main); /* Use theme color */
-  z-index: 9999;
-  animation: fadeOut 0.4s ease 1.2s forwards; /* Smoother fade */
-}
-#splash h1 {
-  color: var(--red-led);
-  font-weight: 900;
-  font-size: 2rem;
-  text-shadow: 0 0 8px var(--red-led), 0 0 20px rgba(255,45,45,0.4);
-  letter-spacing: 1px;
-}
-body.light #splash {
-  background: var(--bg-light);
-}
-
-
-/*
- * --------------------------------
- * 3. FORM CONTROLS & INPUTS (Styles remain the same)
- * --------------------------------
- */
-
-.top-right {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-}
+/* Form Row Layout */
 .form-row {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
-
-label {
+.form-row label {
   display: block;
-  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 8px;
   color: var(--text-muted);
-  margin-bottom: 6px;
 }
-
-textarea, input[type="range"] + label,
-textarea::placeholder {
-  color: inherit;
-}
-textarea {
+.form-row input[type="text"],
+.form-row textarea,
+.form-row input[type="range"] {
   width: 100%;
-  min-height: 70px;
   padding: 12px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.06);
-  background: rgba(255,255,255,0.02);
-  resize: none;
-  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--text-main);
+  font-size: 16px;
+  transition: all 0.2s ease;
+  min-height: 50px;
 }
-body.light textarea {
-  border-color: #e5e7eb;
-  background: #fff;
+.light .form-row input[type="text"],
+.light .form-row textarea {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: #fcfcfc;
   color: var(--text-light);
 }
-
-input[type="range"] {
-  width: 100%;
+.form-row textarea {
+  resize: none;
+}
+.form-row input:focus,
+.form-row textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
 }
 
+/* Color Picker Row */
 .color-pick {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
+  align-items: center;
 }
 .color-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  border: 3px solid rgba(255,255,255,0.06);
-  box-shadow: 0 6px 12px rgba(2,6,23,0.6);
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   cursor: pointer;
-  transition: transform 150ms ease, box-shadow 150ms ease;
+  transition: transform 0.1s, border-color 0.2s, box-shadow 0.2s;
+}
+.color-btn:hover {
+  transform: scale(1.05);
+}
+.color-btn.selected {
+  border-color: var(--text-main);
+  box-shadow: 0 0 0 4px var(--led-color);
+}
+.light .color-btn.selected {
+  border-color: var(--text-light);
 }
 
-.button-primary {
-  width: 100%;
-  padding: 12px;
-  border-radius: 12px;
-  background: var(--accent);
+/* Custom Color Input */
+input[type="color"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 38px;
+  height: 38px;
+  background: none;
   border: none;
-  color: #fff;
-  font-weight: 700;
+  padding: 0;
   cursor: pointer;
-  transition: opacity 150ms ease, background-color 150ms ease;
+}
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border-radius: 50%;
+  border: 3px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.toggle-switch-container {
+/* Speed Slider */
+input[type="range"] {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+}
+.light input[type="range"] {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+/* Checkbox Toggle (for Blink) */
+.toggle-switch {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 0;
+  cursor: pointer;
+  padding: 10px 0;
 }
-.toggle-label {
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-main);
-}
-.toggle-switch input {
+.toggle-switch input[type="checkbox"] {
   display: none;
 }
-.toggle-switch label {
-  display: inline-block;
-  width: 50px;
-  height: 25px;
-  background: var(--text-muted);
-  border-radius: 15px;
+.toggle-switch .slider {
   position: relative;
-  cursor: pointer;
-  transition: background-color 0.3s;
+  width: 44px;
+  height: 24px;
+  background-color: var(--text-muted);
+  border-radius: 24px;
+  transition: background-color 0.4s;
 }
-.toggle-switch label::after {
-  content: '';
+.toggle-switch .slider:before {
+  content: "";
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 19px;
-  height: 19px;
-  background: #fff;
+  height: 16px;
+  width: 16px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
   border-radius: 50%;
-  transition: transform 0.3s;
+  transition: 0.4s;
 }
-.toggle-switch input:checked + label {
-  background: var(--accent);
+.toggle-switch input:checked + .slider {
+  background-color: var(--accent);
 }
-.toggle-switch input:checked + label::after {
-  transform: translateX(25px);
+.toggle-switch input:checked + .slider:before {
+  transform: translateX(20px);
 }
+
+/* Primary Button */
+.button-primary {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: transform 0.1s, opacity 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.button-primary:hover {
+  opacity: 0.9;
+}
+.button-primary:active {
+  transform: scale(0.98);
+}
+
 
 /*
  * --------------------------------
- * 4. SCROLLER DISPLAY STYLES (Keyframes FIX)
+ * 3. SCROLLER DISPLAY STYLES
  * --------------------------------
  */
 
+/* Full Screen Scroller Container */
 .scroller-full {
   position: fixed;
   inset: 0;
@@ -239,22 +254,19 @@ input[type="range"] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--scroller-bg-color);
-  color: #fff;
-  padding: 40px 0; /* Changed from 20px to 0 for better horizontal flow */
-  transition: background 300ms ease, color 300ms ease;
+  background-color: var(--scroller-bg-color);
+  color: var(--text-main);
   overflow: hidden;
-  
+  /* Add a subtle grid background */
   background-image: radial-gradient(var(--grid-dot-color) 1.5px, transparent 1px);
-  background-size: 12px 12px;
+  background-size: 40px 40px;
 }
-
-body.light .scroller-full {
-  background: var(--bg-light);
+.light .scroller-full {
+  background-color: var(--bg-light);
   background-image: radial-gradient(var(--grid-dot-color-light) 1.5px, transparent 1px);
 }
 
-/* Track for the scrolling animation - Key for the seamless effect */
+/* Track for the scrolling animation */
 .scroll-track {
   width: 100%;
   overflow: hidden;
@@ -267,30 +279,73 @@ body.light .scroller-full {
 /* Text element that simulates the LED Dot-Matrix */
 .led-text {
   display: inline-block;
-  font-family: 'Press Start 2P', monospace;
-  font-weight: 400;
+  font-family: 'Press Start 2P', monospace; /* The new pixel font */
+  font-weight: 400; 
   user-select: none;
-  /* Use the CSS variable for the duration */
-  animation: infinite-scroll var(--scroll-duration) linear infinite;
-  
-  /* Initial size - JS will override font-size and letter-spacing */
-  font-size: 9vw;
-  letter-spacing: 0.12em;
-  padding: 0 40px; /* Add padding to separate the duplicated text blocks */
+  /* The glow effect using text-shadow */
 }
 
-/* * The @keyframes for the scroll animation is now STATIC and references the CSS variable.
- * This is the high-performance, responsive way to handle the scrolling animation.
- */
-@keyframes infinite-scroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    /* Moves one complete copy of the text (1/3 of the total content) off-screen */
-    transform: translateX(-33.3333%); 
-  }
+/* Hide Button for Scroller */
+.hide-button {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  z-index: 100;
+  backdrop-filter: blur(4px);
+  transition: background 0.2s;
 }
+.hide-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+
+/*
+ * --------------------------------
+ * 4. THEME TOGGLE
+ * --------------------------------
+ */
+.theme-toggle-container {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    z-index: 100;
+}
+.theme-toggle {
+    background: var(--card-bg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    transition: all 0.2s;
+}
+.light .theme-toggle {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--card-light);
+}
+.theme-toggle:hover {
+    box-shadow: 0 0 8px rgba(79, 70, 229, 0.3);
+}
+
+.theme-toggle svg {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+.theme-toggle-text {
+    font-size: 14px;
+    font-weight: 600;
+}
+
 
 /*
  * --------------------------------
@@ -310,24 +365,7 @@ body.light .scroller-full {
 
 /* Responsive adjustment for small screens */
 @media (max-width: 600px) {
-  .led-text {
-    font-size: 14vw;
-    letter-spacing: 0.08em;
-  }
-}
-
-button:focus-visible,
-textarea:focus-visible,
-input:focus-visible {
-  outline: 3px solid rgba(79,70,229,0.5);
-  outline-offset: 2px;
-  border-radius: 8px;
-}
-
-/* Fade out keyframes */
-@keyframes fadeOut {
-  to {
-    opacity: 0;
-    visibility: hidden;
+  .config-card {
+    padding: 16px;
   }
 }
