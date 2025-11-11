@@ -2,19 +2,18 @@
  * --------------------------------
  * 1. THEME VARIABLES & BASE STYLES
  * --------------------------------
- * This section defines colors and transitions for both Dark (default) and Light modes.
  */
 
 :root {
   /* Global Colors */
   --accent: #4f46e5;
   --red-led: #ff2d2d;
-  --grid-dot-color: rgba(255, 255, 255, 0.08); /* White dot color for dark mode */
+  --grid-dot-color: rgba(255, 255, 255, 0.08); 
   
   /* --- DARK MODE (Default) --- */
-  --bg-main: #0f1724; /* Background body color */
-  --text-main: #e6eef8; /* Primary text color */
-  --text-muted: #9aa8bf; /* Label/helper text color */
+  --bg-main: #0f1724;
+  --text-main: #e6eef8;
+  --text-muted: #9aa8bf;
   --card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
   --scroller-bg-color: #000000;
   
@@ -22,225 +21,244 @@
   --bg-light: #f3f4f6;
   --text-light: #0b1220;
   --card-light: #ffffff;
-  --grid-dot-color-light: rgba(0, 0, 0, 0.06); /* Dark dot color for light mode */
+  --grid-dot-color-light: rgba(0, 0, 0, 0.06);
+  
+  /* Scroller CSS Variable (Set by JS) */
+  --scroll-duration: 15s; /* Default duration */
 }
 
 /* Global Reset and Base Layout */
 * {
   box-sizing: border-box;
-}
-
-html, body {
-  height: 100%;
   margin: 0;
   padding: 0;
 }
-
+html, body, #root {
+  height: 100%;
+}
 body {
-  background-color: var(--bg-main);
+  font-family: Inter, system-ui, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-main);
   color: var(--text-main);
-  font-family: 'Inter', sans-serif;
-  display: flex; /* For centering the main app content */
-  justify-content: center;
-  align-items: center;
-  transition: background-color 0.3s ease;
+  min-height: 100vh;
+  transition: background-color 400ms ease, color 400ms ease;
 }
 
-/* Theme Switching */
-.transition-theme {
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
-
+/* Light Mode Overrides */
 body.light {
-  background-color: var(--bg-light);
+  background: var(--bg-light);
   color: var(--text-light);
 }
 
-.button-primary {
-  padding: 10px 20px;
-  border: none;
-  border-radius: 8px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: opacity 0.2s ease, transform 0.1s ease;
-}
-
-.button-primary:hover {
-  opacity: 0.9;
-}
-
-.button-primary:active {
-  transform: scale(0.98);
+.transition-theme {
+  transition: background-color 420ms ease, color 420ms ease;
 }
 
 /*
  * --------------------------------
- * 2. APP LAYOUT AND CARD
+ * 2. APP LAYOUT & CARD STYLES
  * --------------------------------
  */
 
-#root {
-  width: 100%;
-  max-width: 500px;
-  padding: 20px;
+.app-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
 }
 
 .card {
+  width: 100%;
+  max-width: 720px;
   background: var(--card-bg);
-  padding: 25px;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 8px 30px rgba(2,6,23,0.6);
 }
 
 body.light .card {
   background: var(--card-light);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 8px 30px rgba(0,0,0,0.1);
 }
+
+.header {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+/* Splash screen animation */
+#splash {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-main); /* Use theme color */
+  z-index: 9999;
+  animation: fadeOut 0.4s ease 1.2s forwards; /* Smoother fade */
+}
+#splash h1 {
+  color: var(--red-led);
+  font-weight: 900;
+  font-size: 2rem;
+  text-shadow: 0 0 8px var(--red-led), 0 0 20px rgba(255,45,45,0.4);
+  letter-spacing: 1px;
+}
+body.light #splash {
+  background: var(--bg-light);
+}
+
 
 /*
  * --------------------------------
- * 3. FORM ELEMENTS
+ * 3. FORM CONTROLS & INPUTS (Styles remain the same)
  * --------------------------------
  */
+
+.top-right {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+.form-row {
+  margin-bottom: 16px;
+}
 
 label {
   display: block;
-  margin-bottom: 5px;
-  font-size: 0.9rem;
-  font-weight: 700;
+  font-size: 14px;
   color: var(--text-muted);
+  margin-bottom: 6px;
 }
 
-input[type="text"], input[type="range"] {
+textarea, input[type="range"] + label,
+textarea::placeholder {
+  color: inherit;
+}
+textarea {
   width: 100%;
-  padding: 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: rgba(0, 0, 0, 0.2);
-  color: var(--text-main);
-  font-family: 'Inter', sans-serif;
-  font-size: 1rem;
+  min-height: 70px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+  resize: none;
+  font-size: 15px;
 }
-
-body.light input[type="text"], body.light input[type="range"] {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: rgba(255, 255, 255, 0.9);
+body.light textarea {
+  border-color: #e5e7eb;
+  background: #fff;
   color: var(--text-light);
 }
 
-/* Range Slider Styling */
 input[type="range"] {
-  padding: 0;
-  height: 20px;
-  cursor: pointer;
+  width: 100%;
 }
 
-/* Toggle Switch Styles */
-.toggle-switch {
-  position: relative;
+.color-pick {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.color-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 3px solid rgba(255,255,255,0.06);
+  box-shadow: 0 6px 12px rgba(2,6,23,0.6);
+  cursor: pointer;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.button-primary {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 150ms ease, background-color 150ms ease;
+}
+
+.toggle-switch-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+.toggle-label {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+.toggle-switch input {
+  display: none;
+}
+.toggle-switch label {
   display: inline-block;
   width: 50px;
-  height: 28px;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-}
-
-.slider {
-  position: absolute;
+  height: 25px;
+  background: var(--text-muted);
+  border-radius: 15px;
+  position: relative;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--text-muted);
-  transition: .4s;
-  border-radius: 28px;
+  transition: background-color 0.3s;
 }
-
-.slider:before {
+.toggle-switch label::after {
+  content: '';
   position: absolute;
-  content: "";
-  height: 20px;
-  width: 20px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  transition: .4s;
+  top: 3px;
+  left: 3px;
+  width: 19px;
+  height: 19px;
+  background: #fff;
   border-radius: 50%;
+  transition: transform 0.3s;
 }
-
-input:checked + .slider {
-  background-color: var(--accent);
+.toggle-switch input:checked + label {
+  background: var(--accent);
 }
-
-input:checked + .slider:before {
-  transform: translateX(22px);
-}
-
-/* Color Picker Container */
-.color-picker-container {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.color-option {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 3px solid transparent;
-  transition: border 0.1s ease;
-}
-
-.color-option.selected {
-  border: 3px solid var(--text-main); /* Highlight selected color */
-}
-
-body.light .color-option.selected {
-  border: 3px solid var(--text-light);
+.toggle-switch input:checked + label::after {
+  transform: translateX(25px);
 }
 
 /*
  * --------------------------------
- * 4. LED SCROLLER DISPLAY
+ * 4. SCROLLER DISPLAY STYLES (Keyframes FIX)
  * --------------------------------
  */
 
-/* Full-screen wrapper for the scroller */
 .scroller-full {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: var(--scroller-bg-color); /* Default Black */
-  /* LED Grid Effect */
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--scroller-bg-color);
+  color: #fff;
+  padding: 40px 0; /* Changed from 20px to 0 for better horizontal flow */
+  transition: background 300ms ease, color 300ms ease;
+  overflow: hidden;
+  
   background-image: radial-gradient(var(--grid-dot-color) 1.5px, transparent 1px);
-  background-size: 40px 40px;
-  z-index: 10; /* Above everything else */
-  transition: background-color 0.3s ease;
+  background-size: 12px 12px;
 }
 
-/* Light mode scroller background (if different from default) */
 body.light .scroller-full {
   background: var(--bg-light);
   background-image: radial-gradient(var(--grid-dot-color-light) 1.5px, transparent 1px);
 }
 
-/* Track for the scrolling animation */
+/* Track for the scrolling animation - Key for the seamless effect */
 .scroll-track {
   width: 100%;
   overflow: hidden;
   white-space: nowrap;
-  /* Center the scrolling track vertically */
   display: flex;
   align-items: center;
   height: 100%;
@@ -249,30 +267,30 @@ body.light .scroller-full {
 /* Text element that simulates the LED Dot-Matrix */
 .led-text {
   display: inline-block;
-  font-family: 'Press Start 2P', monospace; /* The new pixel font */
-  font-weight: 400; /* Pixel fonts often don't support bold */
+  font-family: 'Press Start 2P', monospace;
+  font-weight: 400;
   user-select: none;
-  /* Font size and spacing are now responsive and dynamically set */
-  /* text-shadow handles the glow effect */
+  /* Use the CSS variable for the duration */
+  animation: infinite-scroll var(--scroll-duration) linear infinite;
   
-  /* THIS IS THE ONLY STATIC SCROLL ANIMATION */
-  animation: scroll var(--scroll-duration, 5s) linear infinite;
+  /* Initial size - JS will override font-size and letter-spacing */
+  font-size: 9vw;
+  letter-spacing: 0.12em;
+  padding: 0 40px; /* Add padding to separate the duplicated text blocks */
 }
 
-/* * The @keyframes for the scroll animation is now STATIC.
- * We use a CSS variable for duration (set in LEDScroller.js). 
- * This prevents the keyframe injection issue.
+/* * The @keyframes for the scroll animation is now STATIC and references the CSS variable.
+ * This is the high-performance, responsive way to handle the scrolling animation.
  */
-@keyframes scroll {
+@keyframes infinite-scroll {
   from {
-    transform: translateX(100%);
+    transform: translateX(0);
   }
   to {
-    /* Scroller text moves from right (100%) to fully off the left side (-100%) */
-    transform: translateX(calc(-100% - var(--text-width))); 
+    /* Moves one complete copy of the text (1/3 of the total content) off-screen */
+    transform: translateX(-33.3333%); 
   }
 }
-
 
 /*
  * --------------------------------
@@ -290,49 +308,26 @@ body.light .scroller-full {
   animation: blink 0.5s step-end infinite;
 }
 
-/* SPLASH SCREEN FADE OUT ANIMATION */
-#splash {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--bg-main);
-    color: var(--text-main);
-    z-index: 100; /* Highest priority */
-    opacity: 1;
-    transition: opacity 0.3s ease-out; /* Add transition for a smooth fade */
-}
-
-/* Class applied by React to trigger the fade out */
-#splash.splash-fade-out {
-    opacity: 0;
-}
-
-body.light #splash {
-    background-color: var(--bg-light);
-    color: var(--text-light);
-}
-
 /* Responsive adjustment for small screens */
 @media (max-width: 600px) {
-  /* Increase font size slightly on mobile for better visibility */
   .led-text {
     font-size: 14vw;
-    letter-spacing: 0.05em; /* Tighter on small screens */
-  }
-  
-  .card {
-    padding: 15px;
+    letter-spacing: 0.08em;
   }
 }
 
-/* Responsive adjustment for very large screens (if needed) */
-@media (min-width: 1024px) {
-  .led-text {
-    font-size: 10vw;
+button:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: 3px solid rgba(79,70,229,0.5);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Fade out keyframes */
+@keyframes fadeOut {
+  to {
+    opacity: 0;
+    visibility: hidden;
   }
 }
