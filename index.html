@@ -3,13 +3,15 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>LED Scroller by DRACOiNC Techs v0.2.7-fix-1 (Combined JS)</title>
+  <!-- FIX: Updated title to current archive version -->
+  <title>LED Scroller by DRACOiNC Techs v0.2.7-fix-2 (LED Look + Delay)</title>
   <link rel="icon" href="./assets/favicon.ico" type="image/x-icon" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
   <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
   <link rel="stylesheet" href="./css/style.css">
 
+<!-- Initial theme application from localStorage before React mounts -->
 <script>
 (function(){
   try {
@@ -23,10 +25,11 @@
 </head>
 <body class="font-inter transition-theme">
   <div id="root"></div>
+  <!-- FIX: Only one script file is needed now -->
   <script src="./js/LEDScroller.js"></script>
   
   <footer style="position:fixed;left:12px;bottom:8px;font-size:12px;opacity:0.75;color:inherit">
-    LED Scroller by DRACOiNC Techs v0.2.7-fix-1 (Combined JS)
+    LED Scroller by DRACOiNC Techs v0.2.7-fix-2 (LED Look + Delay)
   </footer>
 </body>
 </html>
