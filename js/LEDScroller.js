@@ -33,14 +33,18 @@ function App(){
   // Initialize state with values from localStorage, falling back to defaults
   const [scrollerSettings, setScrollerSettings] = useState(function(){
     try {
+      // Use '1' for true, '0' for false for localStorage boolean compatibility
+      var storedBlink = localStorage.getItem('led_blink') === '1';
+
       return {
         text: localStorage.getItem('led_message') || 'Hello World!',
         speed: Number(localStorage.getItem('led_speed')) || 5,
         color: localStorage.getItem('led_color') || '#EF4444',
+        blinkEnabled: storedBlink, // NEW STATE: Blink
         showScroller: false
       };
     } catch(e) {
-      return { text: 'Hello World!', speed: 5, color: '#EF4444', showScroller: false };
+      return { text: 'Hello World!', speed: 5, color: '#EF4444', blinkEnabled: false, showScroller: false };
     }
   });
 
@@ -78,9 +82,11 @@ function App(){
     try {
       localStorage.setItem('led_message', scrollerSettings.text);
       localStorage.setItem('led_speed', scrollerSettings.speed);
+      // Persist blink setting (1 or 0)
+      localStorage.setItem('led_blink', scrollerSettings.blinkEnabled ? '1' : '0');
       localStorage.setItem('led_color', scrollerSettings.color);
     } catch(e) { /* ignore */ }
-  }, [scrollerSettings.text, scrollerSettings.speed, scrollerSettings.color]);
+  }, [scrollerSettings.text, scrollerSettings.speed, scrollerSettings.color, scrollerSettings.blinkEnabled]);
 
 
   var handleChange = useCallback(function(name, value){
@@ -91,6 +97,10 @@ function App(){
       if(name === 'text' && value.trim().length > 0) setErrorMessage('');
       return copy;
     });
+  }, []);
+
+  var handleToggleBlink = useCallback(function(){
+      setScrollerSettings(function(prev){ return Object.assign({}, prev, { blinkEnabled: !prev.blinkEnabled }); });
   }, []);
 
   var handleShowScroller = useCallback(function(){
@@ -111,17 +121,23 @@ function App(){
     var text = scrollerSettings.text;
     var speed = scrollerSettings.speed;
     var color = scrollerSettings.color;
+    var blinkEnabled = scrollerSettings.blinkEnabled; // Use new blink state
+    
     // Map speed (1-10) to duration (23s-5s). Lower speed value means longer duration.
     var durationSeconds = 25 - (speed * 2); 
+    
+    // Conditional CSS Class for Blink
+    var scrollerClasses = 'animate-scroller led-text py-4 px-2';
+    if(blinkEnabled) { scrollerClasses += ' animate-blink'; }
 
     // We inject CSS styles for keyframes and custom variables using React's element creation.
     // This allows us to use dynamic values from state for a smooth animation update.
-    var styleTag = e('style', null, "\n        /* Keyframes for infinite loop scroll */\n        @keyframes infinite-scroll { from { transform: translateX(100%);} to { transform: translateX(-100%);} }\n        \n        /* Apply animation properties */\n        .animate-scroller { animation: infinite-scroll " + durationSeconds + "s linear infinite; white-space:nowrap; }\n        \n        /* Dot-Matrix Simulation CSS - Enhanced for dot appearance */\n        .led-text { \n          color: " + color + "; \n          font-family: 'Inter', monospace; \n          /* Text shadow simulates the LED glow/blur */\n          text-shadow: 0 0 4px " + color + ", 0 0 8px " + color + ", 0 0 16px rgba(0,0,0,0.5); \n          font-weight: 900; \n          font-size: 9vw; /* Responsive font size */\n          letter-spacing: 0.12em; /* Increase spacing for dot-like effect */\n        }\n        \n        /* Media query to ensure visibility on small screens */\n        @media (max-width:600px){.led-text{font-size:14vw;letter-spacing:0.08em}}\n      ");
+    var styleTag = e('style', null, "\n        /* Keyframes for infinite loop scroll */\n        @keyframes infinite-scroll { from { transform: translateX(100%);} to { transform: translateX(-100%);} }\n        \n        /* Apply animation properties */\n        .animate-scroller { animation: infinite-scroll " + durationSeconds + "s linear infinite; white-space:nowrap; }\n        \n        /* Dot-Matrix Simulation CSS - Enhanced for dot appearance */\n        .led-text { \n          color: " + color + "; \n          font-family: 'Press Start 2P', monospace; /* Use new pixel font */\n          /* Text shadow simulates the LED glow/blur */\n          text-shadow: 0 0 4px " + color + ", 0 0 8px " + color + ", 0 0 16px rgba(0,0,0,0.5); \n          font-weight: 400; \n          font-size: 9vw; /* Responsive font size */\n          letter-spacing: 0.12em; /* Increase spacing for dot-like effect */\n        }\n        \n        /* Media query to ensure visibility on small screens */\n        @media (max-width:600px){.led-text{font-size:14vw;letter-spacing:0.08em}}\n      ");
 
     return e('div', { className: 'scroller-full' },
       styleTag,
       e('div', { className: 'scroll-track' },
-        e('div', { className: 'animate-scroller led-text py-4 px-2' },
+        e('div', { className: scrollerClasses },
           // Text is duplicated (three times) to ensure seamless infinite loop visual
           e('span', { style: { marginRight: '20vw' } }, text.toUpperCase() ),
           e('span', { style: { marginRight: '20vw' } }, text.toUpperCase() ),
@@ -238,7 +254,24 @@ function App(){
           )
         ),
 
-        // 5. Action Button
+        // 5. Blink Feature Toggle (NEW)
+        e('div', { className: 'form-row' },
+            e('div', { className: 'toggle-switch-container' },
+                e('span', { className: 'toggle-label' }, 'Enable Blink/Flash Effect'),
+                e('div', { className: 'toggle-switch' },
+                    e('input', { 
+                        type: 'checkbox', 
+                        id: 'blinkToggle', 
+                        checked: scrollerSettings.blinkEnabled,
+                        onChange: handleToggleBlink 
+                    }),
+                    e('label', { htmlFor: 'blinkToggle' })
+                )
+            )
+        ),
+
+
+        // 6. Action Button
         e('div', null,
           e('button', { 
             onClick: handleShowScroller, 
@@ -262,5 +295,3 @@ function App(){
 
 var rootEl = document.getElementById('root');
 ReactDOM.createRoot(rootEl).render(React.createElement(App));
-// Cleaned up redundant code previously added by fix scripts
-// The theme logic is now fully contained within the React component lifecycle.
