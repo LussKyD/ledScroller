@@ -1,371 +1,66 @@
-/*
- * --------------------------------
- * 1. THEME VARIABLES & BASE STYLES
- * --------------------------------
- * This section defines colors and transitions for both Dark (default) and Light modes.
- */
-
-:root {
-  /* Global Colors */
+:root{
+  --bg-dark:#0f1724;
+  --bg-light:#f3f4f6;
+  --card-dark: rgba(255,255,255,0.02);
+  --card-light: #ffffff;
   --accent: #4f46e5;
   --red-led: #ff2d2d;
-  --grid-dot-color: rgba(255, 255, 255, 0.08); /* White dot color for dark mode */
-  
-  /* --- DARK MODE (Default) --- */
-  --bg-main: #0f1724; /* Background body color */
-  --text-main: #e6eef8; /* Primary text color */
-  --text-muted: #9aa8bf; /* Label/helper text color */
-  --card-bg: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  --scroller-bg-color: #000000;
-  
-  /* --- LIGHT MODE (Overridden by .light class) --- */
-  --bg-light: #f3f4f6;
+  --text-dark: #e6eef8;
   --text-light: #0b1220;
-  --card-light: #ffffff;
-  --grid-dot-color-light: rgba(0, 0, 0, 0.06); /* Dark dot color for light mode */
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body,#root{height:100%}
+body{font-family:Inter,system-ui,Segoe UI,Roboto,'Helvetica Neue',Arial; background:var(--bg-dark); 
+     color:var(--text-dark); min-height:100vh; transition:background-color 400ms ease, color 400ms ease;}
+body.light{background:var(--bg-light); color:var(--text-light);}
 
-  /* Fallback LED Color */
-  --led-color: var(--red-led); 
-}
+/* theme transition helper */
+.transition-theme{transition:background-color 420ms ease, color 420ms ease;}
 
-/* Global Reset and Base Layout */
-* {
-  box-sizing: border-box;
-}
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-body {
-  background-color: var(--bg-main);
-  color: var(--text-main);
-  font-family: 'Inter', sans-serif;
-}
-.transition-theme {
-  transition: background-color 0.3s ease, color 0.3s ease;
-}
+/* Card + layout */
+.app-center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:1rem;}
+.card{width:100%;max-width:720px;background:linear-gradient(180deg, rgba(255,255,255,0.02), 
+      rgba(255,255,255,0.06));border-radius:18px;backdrop-filter:blur(8px);padding:32px;position:relative}
+body.light .card{background:var(--card-light);box-shadow:0 12px 24px rgba(17,24,39,0.08);border:1px solid #e5e7eb}
 
-/* Light Theme Overrides */
-.light {
-  --bg-main: var(--bg-light);
-  --text-main: var(--text-light);
-  --text-muted: #6b7280;
-  --card-bg: var(--card-light);
-  --scroller-bg-color: #ffffff;
-}
+/* Splash screen */
+#splash{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#000;color:#fff;z-index:9999;transition:opacity 500ms ease;font-size:32px;font-weight:900}
+#splash.fadeout{opacity:0}
 
-/*
- * --------------------------------
- * 2. COMPONENT STYLES (Card/Form)
- * --------------------------------
- */
+/* Controls */
+.header{display:flex;justify-content:center;margin-bottom:16px;}
+.controls{display:flex;gap:12px;align-items:center;justify-content:flex-end;}
+.top-right{position:absolute;top:16px;right:16px;}
+.form-row{margin-bottom:16px;}
 
-/* Main application container */
-.app-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  padding: 20px;
-}
+/* FIX: Ensure label styling is handled purely by CSS for Dark/Light mode */
+label{display:block;font-size:14px;color:var(--text-dark);margin-bottom:6px} 
+body.light label{color:var(--text-light);} 
 
-/* Configuration Card */
-.config-card {
-  width: 100%;
-  max-width: 480px;
-  background: var(--card-bg);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-.light .config-card {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
+textarea{width:100%;min-height:70px;padding:12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:inherit;resize:none;font-size:15px;}
+body.light textarea{border-color:#e5e7eb; background:#fff; color:var(--text-light);}
+input[type="range"]{width:100%}
+
+.color-pick{display:flex;gap:8px;flex-wrap:wrap}
+.color-btn{width:36px;height:36px;border-radius:999px;box-shadow:0 6px 12px rgba(2,6,23,0.6);cursor:pointer;border:3px solid transparent}
+/* FIX: Color-btn selected style uses contrasting border for both themes */
+.color-btn.selected{border-color:var(--text-dark)} 
+body.light .color-btn.selected{border-color:var(--text-light)}
+
+/* Button */
+.button-primary{width:100%;padding:12px;border-radius:12px;background:var(--accent);border:none;color:#fff;font-weight:700;cursor:pointer}
+
+/* Scroller display */
+.scroller-full{position:fixed;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;background:#000;color:#fff;padding:40px 20px}
+.scroll-track{width:100%;overflow:hidden;white-space:nowrap}
+/* Increased letter-spacing and reduced blur for clarity */
+.led-text{display:inline-block;font-weight:900;font-size:9vw;letter-spacing:0.12em;user-select:none;text-shadow:0 0 6px, 0 0 10px, 0 0 12px, 0 0 16px, 0 0 20px;}
+
+@keyframes scroll {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-100%, 0, 0); }
 }
 
-/* Form Row Layout */
-.form-row {
-  margin-bottom: 20px;
-}
-.form-row label {
-  display: block;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--text-muted);
-}
-.form-row input[type="text"],
-.form-row textarea,
-.form-row input[type="range"] {
-  width: 100%;
-  padding: 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.15);
-  color: var(--text-main);
-  font-size: 16px;
-  transition: all 0.2s ease;
-  min-height: 50px;
-}
-.light .form-row input[type="text"],
-.light .form-row textarea {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background: #fcfcfc;
-  color: var(--text-light);
-}
-.form-row textarea {
-  resize: none;
-}
-.form-row input:focus,
-.form-row textarea:focus {
-  outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.3);
-}
-
-/* Color Picker Row */
-.color-pick {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.color-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  border: 3px solid transparent;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-  cursor: pointer;
-  transition: transform 0.1s, border-color 0.2s, box-shadow 0.2s;
-}
-.color-btn:hover {
-  transform: scale(1.05);
-}
-.color-btn.selected {
-  border-color: var(--text-main);
-  box-shadow: 0 0 0 4px var(--led-color);
-}
-.light .color-btn.selected {
-  border-color: var(--text-light);
-}
-
-/* Custom Color Input */
-input[type="color"] {
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  appearance: none;
-  width: 38px;
-  height: 38px;
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
-}
-input[type="color"]::-webkit-color-swatch-wrapper {
-  padding: 0;
-}
-input[type="color"]::-webkit-color-swatch {
-  border-radius: 50%;
-  border: 3px solid transparent;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-
-/* Speed Slider */
-input[type="range"] {
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-}
-.light input[type="range"] {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-/* Checkbox Toggle (for Blink) */
-.toggle-switch {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  padding: 10px 0;
-}
-.toggle-switch input[type="checkbox"] {
-  display: none;
-}
-.toggle-switch .slider {
-  position: relative;
-  width: 44px;
-  height: 24px;
-  background-color: var(--text-muted);
-  border-radius: 24px;
-  transition: background-color 0.4s;
-}
-.toggle-switch .slider:before {
-  content: "";
-  position: absolute;
-  height: 16px;
-  width: 16px;
-  left: 4px;
-  bottom: 4px;
-  background-color: white;
-  border-radius: 50%;
-  transition: 0.4s;
-}
-.toggle-switch input:checked + .slider {
-  background-color: var(--accent);
-}
-.toggle-switch input:checked + .slider:before {
-  transform: translateX(20px);
-}
-
-/* Primary Button */
-.button-primary {
-  width: 100%;
-  padding: 14px;
-  border-radius: 12px;
-  border: none;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 20px;
-  transition: transform 0.1s, opacity 0.2s;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-.button-primary:hover {
-  opacity: 0.9;
-}
-.button-primary:active {
-  transform: scale(0.98);
-}
-
-
-/*
- * --------------------------------
- * 3. SCROLLER DISPLAY STYLES
- * --------------------------------
- */
-
-/* Full Screen Scroller Container */
-.scroller-full {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: var(--scroller-bg-color);
-  color: var(--text-main);
-  overflow: hidden;
-  /* Add a subtle grid background */
-  background-image: radial-gradient(var(--grid-dot-color) 1.5px, transparent 1px);
-  background-size: 40px 40px;
-}
-.light .scroller-full {
-  background-color: var(--bg-light);
-  background-image: radial-gradient(var(--grid-dot-color-light) 1.5px, transparent 1px);
-}
-
-/* Track for the scrolling animation */
-.scroll-track {
-  width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  display: flex;
-  align-items: center;
-  height: 100%;
-}
-
-/* Text element that simulates the LED Dot-Matrix */
-.led-text {
-  display: inline-block;
-  font-family: 'Press Start 2P', monospace; /* The new pixel font */
-  font-weight: 400; 
-  user-select: none;
-  /* The glow effect using text-shadow */
-}
-
-/* Hide Button for Scroller */
-.hide-button {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 14px;
-  z-index: 100;
-  backdrop-filter: blur(4px);
-  transition: background 0.2s;
-}
-.hide-button:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-
-/*
- * --------------------------------
- * 4. THEME TOGGLE
- * --------------------------------
- */
-.theme-toggle-container {
-    position: absolute;
-    top: 15px;
-    left: 15px;
-    z-index: 100;
-}
-.theme-toggle {
-    background: var(--card-bg);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 8px;
-    padding: 8px 12px;
-    cursor: pointer;
-    color: var(--text-main);
-    display: flex;
-    align-items: center;
-    transition: all 0.2s;
-}
-.light .theme-toggle {
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    background: var(--card-light);
-}
-.theme-toggle:hover {
-    box-shadow: 0 0 8px rgba(79, 70, 229, 0.3);
-}
-
-.theme-toggle svg {
-    width: 20px;
-    height: 20px;
-    margin-right: 8px;
-}
-.theme-toggle-text {
-    font-size: 14px;
-    font-weight: 600;
-}
-
-
-/*
- * --------------------------------
- * 5. ANIMATIONS & UTILITIES
- * --------------------------------
- */
-
-/* Blink Effect Keyframes */
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.1; }
-}
-
-.animate-blink {
-  animation: blink 0.5s step-end infinite;
-}
-
-/* Responsive adjustment for small screens */
-@media (max-width: 600px) {
-  .config-card {
-    padding: 16px;
-  }
+.animate-scroller {
+  animation: scroll var(--scroller-duration, 20s) linear infinite;
 }
