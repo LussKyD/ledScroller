@@ -2,7 +2,37 @@
   const e = React.createElement;
   const { useState, useEffect, useCallback } = React;
 
-  const APP_VERSION = 'v0.2.8';
+  const APP_VERSION = 'v0.3.0';
+
+  function getSearchParams(){
+    var s = typeof location !== 'undefined' && location.search ? location.search.slice(1) : '';
+    if (!s) return null;
+    var o = {};
+    s.split('&').forEach(function(p){
+      var kv = p.split('=');
+      if (kv.length >= 2) o[decodeURIComponent(kv[0])] = decodeURIComponent(kv[1].replace(/\+/g, ' '));
+    });
+    return o;
+  }
+
+  function buildShareUrl(settings){
+    var base = typeof location !== 'undefined' ? (location.origin + location.pathname) : '';
+    var p = [];
+    if (settings.text) p.push('message=' + encodeURIComponent(settings.text));
+    if (settings.color) p.push('color=' + encodeURIComponent(settings.color.replace('#','')));
+    if (settings.speed != null) p.push('speed=' + settings.speed);
+    if (settings.blink) p.push('blink=1');
+    if (settings.mode && settings.mode !== 'scroll') p.push('mode=' + settings.mode);
+    return p.length ? base + '?' + p.join('&') : base;
+  }
+
+  function parseHex(val){
+    if (!val || typeof val !== 'string') return null;
+    var c = val.replace('#','').trim();
+    if (/^[0-9A-Fa-f]{6}$/.test(c)) return '#' + c;
+    if (/^[0-9A-Fa-f]{3}$/.test(c)) return '#' + c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+    return null;
+  }
 
   const COLOR_OPTIONS = [
     { name: 'Red', hex: '#EF4444' },
@@ -10,6 +40,13 @@
     { name: 'Blue', hex: '#3B82F6' },
     { name: 'Yellow', hex: '#F59E0B' },
     { name: 'White', hex: '#FFFFFF' },
+  ];
+
+  const PRESET_MESSAGES = [
+    { label: 'Welcome', text: 'WELCOME' },
+    { label: "We're Open", text: "WE'RE OPEN" },
+    { label: 'Back in 5', text: 'BACK IN 5 MIN' },
+    { label: 'Sale', text: 'SALE' },
   ];
 
   // --- BEGIN NON-REACT UTILITY FUNCTIONS (For Button Contrast & Accessibility) ---
@@ -56,17 +93,30 @@
     });
     const [showSplash, setShowSplash] = useState(true);
     const [scrollerSettings, setScrollerSettings] = useState(function(){
+      var url = getSearchParams();
+      var defaults = {
+        text: 'Hello World!',
+        speed: 5,
+        color: '#EF4444',
+        blink: false,
+        mode: 'scroll',
+        showScroller: false
+      };
       try {
-        return {
-          text: localStorage.getItem('led_message') || 'Hello World!',
-          speed: Number(localStorage.getItem('led_speed')) || 5,
-          color: localStorage.getItem('led_color') || '#EF4444',
-          blink: localStorage.getItem('led_blink') === 'true',
-          showScroller: false
-        };
-      } catch(e) {
-        return { text: 'Hello World!', speed: 5, color: '#EF4444', blink: false, showScroller: false };
+        defaults.text = localStorage.getItem('led_message') || defaults.text;
+        defaults.speed = Number(localStorage.getItem('led_speed')) || defaults.speed;
+        defaults.color = localStorage.getItem('led_color') || defaults.color;
+        defaults.blink = localStorage.getItem('led_blink') === 'true';
+        defaults.mode = localStorage.getItem('led_mode') || 'scroll';
+      } catch(e) {}
+      if (url) {
+        if (url.message != null) defaults.text = url.message;
+        if (url.color != null) defaults.color = url.color.charAt(0) === '#' ? url.color : '#' + url.color;
+        if (url.speed != null) defaults.speed = Math.min(10, Math.max(1, Number(url.speed) || 5));
+        if (url.blink === '1' || url.blink === 'true') defaults.blink = true;
+        if (url.mode === 'static') defaults.mode = 'static';
       }
+      return defaults;
     });
 
     useEffect(function(){
@@ -104,6 +154,7 @@
           if(name === 'speed') localStorage.setItem('led_speed', value);
           if(name === 'color') localStorage.setItem('led_color', value);
           if(name === 'blink') localStorage.setItem('led_blink', value ? 'true' : 'false');
+          if(name === 'mode') localStorage.setItem('led_mode', value);
         } catch(e) { /* ignore */ }
       }
       setScrollerSettings(function(prev){
@@ -129,14 +180,23 @@
       });
     }, []);
 
+    useEffect(function(){
+      if (!scrollerSettings.showScroller) return;
+      function onKey(e){ if (e.key === 'Escape') handleHideScroller(); }
+      window.addEventListener('keydown', onKey);
+      return function(){ window.removeEventListener('keydown', onKey); };
+    }, [scrollerSettings.showScroller, handleHideScroller]);
+
     function LEDScrollerDisplay(){
-      const { text, speed, color, blink } = scrollerSettings;
+      const { text, speed, color, blink, mode } = scrollerSettings;
+      const isStatic = mode === 'static';
       const [isScrolling, setIsScrolling] = useState(false);
       useEffect(function(){
+          if (isStatic) return;
           setIsScrolling(false);
           const delayTimer = setTimeout(function(){ setIsScrolling(true); }, 3000);
           return function(){ clearTimeout(delayTimer); };
-      }, [text, speed, color]);
+      }, [text, speed, color, isStatic]);
 
       const durationSeconds = 25 - (speed * 2);
       const animationClass = isScrolling ? 'animate-scroller' : 'paused';
@@ -150,17 +210,28 @@
         );
       }
 
+      if (isStatic) {
+        return e('div', { className: 'scroller-full scroller-static' },
+          e('div', { className: 'scroll-track-container scroll-track-container--static', style: containerStyle },
+            e('div', { className: 'scroll-track scroll-track--static' },
+              e('div', { className: 'led-text led-text--static' }, text.toUpperCase())
+            )
+          ),
+          e('button', { onClick: handleHideScroller, className: 'button-primary exit-config-btn', style: { marginTop: '18px', width: 'auto', padding: '10px 18px', background:'#ef4444' } }, 'Exit Config (Esc)')
+        );
+      }
+
       return e('div', { className: 'scroller-full' },
         e('div', { className: 'scroll-track-container', style: containerStyle },
             e('div', { className: 'scroll-track' },
-                e('div', { className: ledClass, style: { '--scroller-duration': durationSeconds + 's' } }, /* duration on animated element */
+                e('div', { className: ledClass, style: { '--scroller-duration': durationSeconds + 's' } },
                     e('span', { style: { marginRight: '20vw' } }, text.toUpperCase() ),
                     e('span', { style: { marginRight: '20vw' } }, text.toUpperCase() ),
                     e('span', null, text.toUpperCase() )
                 )
             )
         ),
-        e('button', { onClick: handleHideScroller, className: 'button-primary exit-config-btn', style: { marginTop: '18px', width: 'auto', padding: '10px 18px', background:'#ef4444' } }, 'Exit Config')
+        e('button', { onClick: handleHideScroller, className: 'button-primary exit-config-btn', style: { marginTop: '18px', width: 'auto', padding: '10px 18px', background:'#ef4444' } }, 'Exit Config (Esc)')
       );
     }
 
@@ -168,6 +239,21 @@
         const currentColor = scrollerSettings.color;
         const cardStyle = { '--range-thumb-color': currentColor, '--range-track-color': currentColor + '33' };
         const showScrollerBtnStyle = { backgroundColor: currentColor, color: contrast(currentColor) };
+        const [copyFeedback, setCopyFeedback] = useState(false);
+        const [hexInput, setHexInput] = useState(currentColor.replace('#',''));
+
+        function handleCopyLink(){
+          var url = buildShareUrl(scrollerSettings);
+          if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(url).then(function(){ setCopyFeedback(true); setTimeout(function(){ setCopyFeedback(false); }, 2000); }).catch(function(){});
+          }
+        }
+
+        function handleHexBlur(){
+          var hex = parseHex(hexInput);
+          if (hex) handleChange('color', hex);
+          else setHexInput(currentColor.replace('#',''));
+        }
 
       return e('div', { className: 'app-center' },
         e('div', { className: 'top-right' },
@@ -191,19 +277,60 @@
               placeholder: 'Enter your message here...'
             })
           ),
+          e('div', { className: 'form-row form-row--presets' },
+            e('span', { className: 'presets-label' }, 'Quick:'),
+            PRESET_MESSAGES.map(function(p){
+              return e('button', {
+                key: p.label,
+                type: 'button',
+                className: 'preset-btn',
+                onClick: function(){ handleChange('text', p.text); }
+              }, p.label);
+            })
+          ),
           e('div', { className: 'form-row' },
             e('label', { htmlFor: 'colorGroup' }, 'LED Color:'),
             e('div', { id: 'colorGroup', className: 'color-pick', role: 'group' },
               COLOR_OPTIONS.map(function(opt){
                 return e('button', {
                   key: opt.hex,
+                  type: 'button',
                   className: 'color-btn' + (scrollerSettings.color === opt.hex ? ' selected' : ''),
                   style: { backgroundColor: opt.hex },
                   title: opt.name,
                   'data-led-color': opt.hex,
-                  onClick: function(){ handleChange('color', opt.hex); }
+                  onClick: function(){ handleChange('color', opt.hex); setHexInput(opt.hex.replace('#','')); }
                 });
               })
+            ),
+            e('div', { className: 'hex-row' },
+              e('label', { htmlFor: 'hexInput' }, 'Or hex:'),
+              e('input', {
+                id: 'hexInput',
+                type: 'text',
+                className: 'hex-input',
+                value: hexInput,
+                onChange: function(ev){ setHexInput(ev.target.value); },
+                onBlur: handleHexBlur,
+                onKeyDown: function(ev){ if (ev.key === 'Enter') handleHexBlur(); },
+                placeholder: 'EF4444',
+                maxLength: 7
+              })
+            )
+          ),
+          e('div', { className: 'form-row' },
+            e('label', { htmlFor: 'modeGroup' }, 'Display:'),
+            e('div', { id: 'modeGroup', className: 'mode-toggle', role: 'group' },
+              e('button', {
+                type: 'button',
+                className: 'mode-btn' + (scrollerSettings.mode === 'scroll' ? ' selected' : ''),
+                onClick: function(){ handleChange('mode', 'scroll'); }
+              }, 'Scroll'),
+              e('button', {
+                type: 'button',
+                className: 'mode-btn' + (scrollerSettings.mode === 'static' ? ' selected' : ''),
+                onClick: function(){ handleChange('mode', 'static'); }
+              }, 'Static')
             )
           ),
           e('div', { className: 'form-row' },
@@ -228,7 +355,8 @@
               className: 'range'
             })
           ),
-          e('div', null,
+          e('div', { className: 'form-row form-row--actions' },
+            e('button', { type: 'button', onClick: handleCopyLink, className: 'button-secondary' }, copyFeedback ? 'Copied!' : 'Copy link'),
             e('button', { onClick: handleShowScroller, className: 'button-primary show-scroller-btn', style: showScrollerBtnStyle }, 'Show Scroller')
           )
         )

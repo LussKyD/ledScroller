@@ -1,0 +1,23 @@
+{
+  "name": "LED Scroller by DRACOiNC Techs",
+  "short_name": "LED Scroller",
+  "description": "Retro LED dot-matrix marquee — customizable message, colors, and speed.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f1724",
+  "theme_color": "#4f46e5",
+  "icons": [
+    {
+      "src": "./assets/favicon.ico",
+      "sizes": "48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "./assets/placeholder-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

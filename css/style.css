@@ -87,12 +87,48 @@ input[type="range"]::-moz-range-thumb {
 
 .color-pick{display:flex;gap:8px;flex-wrap:wrap}
 .color-btn{width:36px;height:36px;border-radius:999px;box-shadow:0 6px 12px rgba(2,6,23,0.6);cursor:pointer;border:3px solid transparent}
-/* FIX: Color-btn selected style uses contrasting border for both themes */
-.color-btn.selected{border-color:var(--text-dark)} 
+.color-btn.selected{border-color:var(--text-dark)}
 body.light .color-btn.selected{border-color:var(--text-light)}
+
+.presets-label{font-size:14px;color:var(--text-dark);margin-right:8px}
+body.light .presets-label{color:var(--text-light)}
+.form-row--presets{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.preset-btn{padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.06);color:inherit;font-size:13px;cursor:pointer;transition:background 0.2s}
+.preset-btn:hover{background:rgba(255,255,255,0.12)}
+body.light .preset-btn{border-color:#e5e7eb;background:#f9fafb}
+body.light .preset-btn:hover{background:#f3f4f6}
+
+.hex-row{display:flex;align-items:center;gap:8px;margin-top:8px}
+.hex-row label{margin-bottom:0;margin-right:4px}
+.hex-input{width:80px;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:inherit;font-family:monospace;font-size:13px}
+body.light .hex-input{border-color:#e5e7eb;background:#fff}
+
+.mode-toggle{display:flex;gap:0;border-radius:10px;overflow:hidden;border:1px solid rgba(255,255,255,0.15)}
+body.light .mode-toggle{border-color:#e5e7eb}
+.mode-btn{padding:8px 16px;border:none;background:rgba(255,255,255,0.06);color:inherit;font-size:14px;cursor:pointer}
+.mode-btn.selected{background:var(--accent);color:#fff}
+.mode-btn:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+body.light .mode-btn{background:#f3f4f6}
+body.light .mode-btn.selected{background:var(--accent);color:#fff}
+
+.form-row--actions{display:flex;gap:12px;flex-wrap:wrap}
+.form-row--actions .button-primary{flex:1;min-width:140px}
+.button-secondary{padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,0.25);background:transparent;color:inherit;font-weight:600;cursor:pointer}
+.button-secondary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+body.light .button-secondary{border-color:#d1d5db;color:var(--text-light)}
 
 /* Button */
 .button-primary{width:100%;padding:12px;border-radius:12px;background:var(--accent);border:none;color:#fff;font-weight:700;cursor:pointer}
+.button-primary:focus-visible,.color-btn:focus-visible,.theme-toggle:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+textarea:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* Respect reduced motion: no blink animation, no transitions */
+@media (prefers-reduced-motion: reduce) {
+  .animate-scroller.led-blink,.paused.led-blink{animation:scroll var(--scroller-duration,20s) linear infinite}
+  .paused.led-blink{animation-play-state:paused}
+  .led-text.led-blink{animation:scroll var(--scroller-duration,20s) linear infinite}
+  #splash{transition:none}
+  body,.transition-theme{transition:none}
+}
 
 /* Scroller display */
 .scroller-full{position:fixed;inset:0;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;background:#000;color:#fff;padding:40px 20px}
@@ -118,11 +154,14 @@ body.light .color-btn.selected{border-color:var(--text-light)}
 .scroll-track{
     width:100%;
     white-space:nowrap;
-    /* Vertical centering for the text inside the track */
     height: 100%;
     display: flex;
     align-items: center;
 }
+.scroller-full.scroller-static{align-items:center;justify-content:center}
+.scroll-track-container--static{display:flex;align-items:center;justify-content:center}
+.scroll-track--static{justify-content:center;text-align:center}
+.led-text--static{letter-spacing:0.18em}
 
 /* LED text: color and glow via CSS variables (set by React on container) */
 .led-text{
