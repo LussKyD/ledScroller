@@ -124,7 +124,7 @@ body.light .color-btn.selected{border-color:var(--text-light)}
     align-items: center;
 }
 
-/* Increased letter-spacing, box shadow for segmented/square look */
+/* LED text: color and glow via CSS variables (set by React on container) */
 .led-text{
     display:inline-block;
     font-weight:900;
@@ -132,7 +132,28 @@ body.light .color-btn.selected{border-color:var(--text-light)}
     line-height: 1;
     letter-spacing:0.18em; /* Wider gap for segmented look */
     user-select:none;
-    /* Apply glow/shadow dynamically by JS */
+    color: var(--led-color, #EF4444);
+    text-shadow: var(--led-glow, 0 0 6px currentColor, 0 0 10px currentColor);
+}
+
+/* Blink effect (optional) */
+@keyframes led-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+.led-text.led-blink {
+  animation: led-blink 1s ease-in-out infinite;
+}
+/* When both scroll and blink: blink runs on the same element */
+.animate-scroller.led-blink,
+.paused.led-blink {
+  animation: scroll var(--scroller-duration, 20s) linear infinite, led-blink 1s ease-in-out infinite;
+}
+.paused.led-blink {
+  animation-play-state: paused, running;
+}
+.animate-scroller.led-blink {
+  animation-play-state: running, running;
 }
 
 @keyframes scroll {
@@ -147,4 +168,31 @@ body.light .color-btn.selected{border-color:var(--text-light)}
 /* State for the initial delay (3-second wait) */
 .paused {
     animation-play-state: paused;
+}
+
+/* App footer (version) */
+.app-footer {
+  position: fixed;
+  left: 12px;
+  bottom: 8px;
+  font-size: 12px;
+  opacity: 0.75;
+  color: inherit;
+  pointer-events: none;
+}
+
+/* Storage unavailable notice */
+.storage-notice {
+  position: fixed;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+  padding: 6px 12px;
+  background: rgba(239, 68, 68, 0.9);
+  color: #fff;
+  border-radius: 8px;
+  z-index: 1000;
+  max-width: 90%;
+  text-align: center;
 }
